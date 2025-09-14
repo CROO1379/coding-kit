@@ -157,6 +157,35 @@ function copyStaticFiles() {
   }
 }
 
+// 動的にページ設定を生成
+function generatePageConfig() {
+  const pugFiles = glob.sync('src/pug/**/index.pug', {
+    ignore: ['src/pug/_*/**']
+  });
+
+  const dynamicPages = {};
+
+  pugFiles.forEach(file => {
+    const relativePath = file.replace('src/pug/', '').replace('/index.pug', '').replace('index.pug', '');
+    const pageKey = relativePath || 'home';
+
+    // 既存のpages設定があればそれを使用、なければデフォルト値を生成
+    if (pages[pageKey]) {
+      dynamicPages[pageKey] = pages[pageKey];
+    } else {
+      // 新しいページのデフォルト設定を生成
+      const pageTitle = pageKey === 'home' ? 'ホーム' : pageKey.charAt(0).toUpperCase() + pageKey.slice(1);
+      dynamicPages[pageKey] = {
+        title: `${pageTitle} - ${site.name}`,
+        description: `${pageTitle}ページの説明`,
+        url: site.url + (pageKey === 'home' ? '' : pageKey)
+      };
+    }
+  });
+
+  return dynamicPages;
+}
+
 // 1. Pugファイルをコンパイル
 function buildPugFiles() {
   console.log('🔨 Building Pug files...');
@@ -165,17 +194,20 @@ function buildPugFiles() {
     ignore: ['src/pug/_*/**']
   });
 
+  // 動的にページ設定を生成
+  const dynamicPages = generatePageConfig();
+
   pugFiles.forEach(file => {
     const relativePath = file.replace('src/pug/', '').replace('/index.pug', '').replace('index.pug', '');
     const outputPath = relativePath ? `dist/${relativePath}/index.html` : 'dist/index.html';
 
     const pageKey = relativePath || 'home';
-    const pageConfig = pages[pageKey] || pages.home;
+    const pageConfig = dynamicPages[pageKey];
 
     try {
       const html = pug.renderFile(file, {
         site,
-        pages,
+        pages: dynamicPages,
         page: {
           slug: pageKey,
           css_slug: pageKey === 'home' ? 'home' : pageKey,
@@ -207,7 +239,6 @@ function buildSCSSFiles() {
   console.log('🎨 Building SCSS files...');
 
   ensureDir('dist/assets/css');
-  ensureDir('dist/assets/css/page');
 
   try {
     // global.scss
@@ -215,14 +246,31 @@ function buildSCSSFiles() {
     fs.writeFileSync('dist/assets/css/global.css', globalResult.css);
     console.log('   ✓ dist/assets/css/global.css');
 
-    // ページ固有のSCSS
-    const pageFiles = glob.sync('src/scss/page/*.scss');
+    // ページ固有のSCSS - 動的に検出
+    const pageFiles = glob.sync('src/scss/**/*.scss', {
+      ignore: [
+        'src/scss/_*/**/*.scss',  // _で始まるディレクトリは除外（パーシャル用）
+        'src/scss/**/_*.scss',    // _で始まるファイルは除外（パーシャル用）
+        'src/scss/global.scss'    // グローバルファイルは別途処理
+      ]
+    });
+
     pageFiles.forEach(file => {
       try {
-        const name = path.basename(file, '.scss');
+        // src/scss/ からの相対パスを取得
+        const relativePath = path.relative('src/scss', file);
+        const dirName = path.dirname(relativePath);
+        const fileName = path.basename(file, '.scss');
+
+        // 出力パスを動的に生成
+        const outputPath = dirName === '.'
+          ? `dist/assets/css/${fileName}.css`
+          : `dist/assets/css/${dirName}/${fileName}.css`;
+
+        ensureDir(path.dirname(outputPath));
         const result = sass.compile(file);
-        fs.writeFileSync(`dist/assets/css/page/${name}.css`, result.css);
-        console.log(`   ✓ dist/assets/css/page/${name}.css`);
+        fs.writeFileSync(outputPath, result.css);
+        console.log(`   ✓ ${outputPath}`);
       } catch (error) {
         console.error(`   ✗ Error compiling ${file}:`, error.message);
       }
@@ -237,7 +285,6 @@ function buildJSFiles() {
   console.log('📦 Building JS files...');
 
   ensureDir('dist/assets/js');
-  ensureDir('dist/assets/js/page');
 
   // main.js
   if (fs.existsSync('src/js/main.js')) {
@@ -246,13 +293,29 @@ function buildJSFiles() {
     console.log('   ✓ dist/assets/js/main.js');
   }
 
-  // ページ固有のJS
-  const pageFiles = glob.sync('src/js/page/*.js');
-  pageFiles.forEach(file => {
-    const name = path.basename(file);
+  // JSファイルを動的に検出
+  const jsFiles = glob.sync('src/js/**/*.js', {
+    ignore: [
+      'src/js/vendor/**/*.js',  // vendorディレクトリは除外（外部ライブラリ用）
+      'src/js/main.js'          // mainファイルは別途処理
+    ]
+  });
+
+  jsFiles.forEach(file => {
+    // src/js/ からの相対パスを取得
+    const relativePath = path.relative('src/js', file);
+    const dirName = path.dirname(relativePath);
+    const fileName = path.basename(file);
+
+    // 出力パスを動的に生成
+    const outputPath = dirName === '.'
+      ? `dist/assets/js/${fileName}`
+      : `dist/assets/js/${dirName}/${fileName}`;
+
+    ensureDir(path.dirname(outputPath));
     const content = fs.readFileSync(file, 'utf-8');
-    fs.writeFileSync(`dist/assets/js/page/${name}`, content);
-    console.log(`   ✓ dist/assets/js/page/${name}`);
+    fs.writeFileSync(outputPath, content);
+    console.log(`   ✓ ${outputPath}`);
   });
 
   // vendor JS（もしあれば）

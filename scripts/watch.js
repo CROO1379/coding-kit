@@ -136,6 +136,35 @@ function copyUsedAssets(usedAssets) {
   }
 }
 
+// 動的にページ設定を生成
+function generatePageConfig() {
+  const pugFiles = glob.sync('src/pug/**/index.pug', {
+    ignore: ['src/pug/_*/**']
+  });
+
+  const dynamicPages = {};
+
+  pugFiles.forEach(file => {
+    const relativePath = file.replace('src/pug/', '').replace('/index.pug', '').replace('index.pug', '');
+    const pageKey = relativePath || 'home';
+
+    // 既存のpages設定があればそれを使用、なければデフォルト値を生成
+    if (pages[pageKey]) {
+      dynamicPages[pageKey] = pages[pageKey];
+    } else {
+      // 新しいページのデフォルト設定を生成
+      const pageTitle = pageKey === 'home' ? 'ホーム' : pageKey.charAt(0).toUpperCase() + pageKey.slice(1);
+      dynamicPages[pageKey] = {
+        title: `${pageTitle} - ${site.name}`,
+        description: `${pageTitle}ページの説明`,
+        url: site.url + (pageKey === 'home' ? '' : pageKey)
+      };
+    }
+  });
+
+  return dynamicPages;
+}
+
 // Pugファイルをコンパイル
 function buildPugFiles(specificFile = null) {
   console.log('🔨 Building Pug files...');
@@ -151,17 +180,20 @@ function buildPugFiles(specificFile = null) {
     console.log(`   📝 Partial file changed: ${specificFile} - recompiling all pages`);
   }
 
+  // 動的にページ設定を生成
+  const dynamicPages = generatePageConfig();
+
   pugFiles.forEach(file => {
     const relativePath = file.replace('src/pug/', '').replace('/index.pug', '').replace('index.pug', '');
     const outputPath = relativePath ? `dist/${relativePath}/index.html` : 'dist/index.html';
 
     const pageKey = relativePath || 'home';
-    const pageConfig = pages[pageKey] || pages.home;
+    const pageConfig = dynamicPages[pageKey];
 
     try {
       const html = pug.renderFile(file, {
         site,
-        pages,
+        pages: dynamicPages,
         page: {
           slug: pageKey,
           css_slug: pageKey === 'home' ? 'home' : pageKey,
@@ -193,7 +225,6 @@ function buildSCSSFiles(specificFile = null) {
   console.log('🎨 Building SCSS files...');
 
   ensureDir('dist/assets/css');
-  ensureDir('dist/assets/css/page');
 
   try {
     if (!specificFile || specificFile.includes('global.scss')) {
@@ -203,24 +234,63 @@ function buildSCSSFiles(specificFile = null) {
       console.log('   ✓ dist/assets/css/global.css');
     }
 
-    // ページ固有のSCSS
-    const pageFiles = specificFile
-      ? [specificFile].filter(file => file.includes('src/scss/page/'))
-      : glob.sync('src/scss/page/*.scss');
+    // SCSS ファイルを動的に検出
+    let scssFiles;
+    if (specificFile) {
+      // 特定ファイルまたは部分ファイルの変更時
+      const isPartialFile = path.basename(specificFile).startsWith('_');
 
-    pageFiles.forEach(file => {
+      if (isPartialFile) {
+        // 部分ファイルが変更された場合、全SCSSファイルを再ビルド
+        console.log(`   📝 Partial SCSS file changed: ${specificFile}, rebuilding all SCSS files`);
+        scssFiles = glob.sync('src/scss/**/*.scss', {
+          ignore: [
+            'src/scss/_*/**/*.scss',
+            'src/scss/**/_*.scss',
+            'src/scss/global.scss'
+          ]
+        });
+      } else {
+        // 通常のSCSSファイルが変更された場合
+        scssFiles = [specificFile].filter(file =>
+          !file.includes('global.scss') &&
+          !path.basename(file).startsWith('_')
+        );
+      }
+    } else {
+      // 全体ビルド時
+      scssFiles = glob.sync('src/scss/**/*.scss', {
+        ignore: [
+          'src/scss/_*/**/*.scss',
+          'src/scss/**/_*.scss',
+          'src/scss/global.scss'
+        ]
+      });
+    }
+
+    scssFiles.forEach(file => {
       try {
-        const name = path.basename(file, '.scss');
+        // src/scss/ からの相対パスを取得
+        const relativePath = path.relative('src/scss', file);
+        const dirName = path.dirname(relativePath);
+        const fileName = path.basename(file, '.scss');
+
+        // 出力パスを動的に生成
+        const outputPath = dirName === '.'
+          ? `dist/assets/css/${fileName}.css`
+          : `dist/assets/css/${dirName}/${fileName}.css`;
+
+        ensureDir(path.dirname(outputPath));
         const result = sass.compile(file);
-        fs.writeFileSync(`dist/assets/css/page/${name}.css`, result.css);
-        console.log(`   ✓ dist/assets/css/page/${name}.css`);
+        fs.writeFileSync(outputPath, result.css);
+        console.log(`   ✓ ${outputPath}`);
       } catch (error) {
         console.error(`   ✗ Error compiling ${file}:`, error.message);
       }
     });
 
     // global.scssの依存ファイルが変更された場合は全体を再コンパイル
-    if (specificFile && !specificFile.includes('page/') && !specificFile.includes('global.scss')) {
+    if (specificFile && !specificFile.includes('global.scss') && path.basename(specificFile).startsWith('_')) {
       const globalResult = sass.compile('src/scss/global.scss');
       fs.writeFileSync('dist/assets/css/global.css', globalResult.css);
       console.log('   ✓ dist/assets/css/global.css (dependency updated)');
@@ -235,7 +305,6 @@ function buildJSFiles(specificFile = null) {
   console.log('📦 Building JS files...');
 
   ensureDir('dist/assets/js');
-  ensureDir('dist/assets/js/page');
 
   if (!specificFile || specificFile.includes('main.js')) {
     // main.js
@@ -246,16 +315,39 @@ function buildJSFiles(specificFile = null) {
     }
   }
 
-  // ページ固有のJS
-  const pageFiles = specificFile
-    ? [specificFile].filter(file => file.includes('src/js/page/'))
-    : glob.sync('src/js/page/*.js');
+  // JSファイルを動的に検出
+  let jsFiles;
+  if (specificFile) {
+    // 特定ファイルが指定された場合
+    jsFiles = [specificFile].filter(file =>
+      !file.includes('main.js') &&
+      !file.includes('src/js/vendor/')
+    );
+  } else {
+    // 全体ビルド時
+    jsFiles = glob.sync('src/js/**/*.js', {
+      ignore: [
+        'src/js/vendor/**/*.js',
+        'src/js/main.js'
+      ]
+    });
+  }
 
-  pageFiles.forEach(file => {
-    const name = path.basename(file);
+  jsFiles.forEach(file => {
+    // src/js/ からの相対パスを取得
+    const relativePath = path.relative('src/js', file);
+    const dirName = path.dirname(relativePath);
+    const fileName = path.basename(file);
+
+    // 出力パスを動的に生成
+    const outputPath = dirName === '.'
+      ? `dist/assets/js/${fileName}`
+      : `dist/assets/js/${dirName}/${fileName}`;
+
+    ensureDir(path.dirname(outputPath));
     const content = fs.readFileSync(file, 'utf-8');
-    fs.writeFileSync(`dist/assets/js/page/${name}`, content);
-    console.log(`   ✓ dist/assets/js/page/${name}`);
+    fs.writeFileSync(outputPath, content);
+    console.log(`   ✓ ${outputPath}`);
   });
 
   // vendor JS
