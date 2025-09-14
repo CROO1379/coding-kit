@@ -18,35 +18,7 @@ function analyzeAssetUsage() {
 
   console.log('🔍 Analyzing asset usage...');
 
-  // Pugファイルから画像パスを抽出
-  const pugFiles = glob.sync('src/pug/**/*.pug');
-  pugFiles.forEach(file => {
-    const content = fs.readFileSync(file, 'utf-8');
-
-    // img要素のsrc属性を抽出（絶対パス形式）
-    const imgMatches = content.match(/src=["']\/assets\/img\/([^"']+)["']/g);
-    if (imgMatches) {
-      imgMatches.forEach(match => {
-        const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
-        if (pathMatch) {
-          usedAssets.add(`img/${pathMatch[1]}`);
-        }
-      });
-    }
-
-    // srcset属性からも抽出
-    const srcsetMatches = content.match(/srcset=["']\/assets\/img\/([^"']+)["']/g);
-    if (srcsetMatches) {
-      srcsetMatches.forEach(match => {
-        const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
-        if (pathMatch) {
-          usedAssets.add(`img/${pathMatch[1]}`);
-        }
-      });
-    }
-  });
-
-  // コンパイル済みHTMLファイルからも画像パスを抽出
+  // コンパイル済みHTMLファイルから画像パスを抽出
   const htmlFiles = glob.sync('dist/**/*.html');
   htmlFiles.forEach(file => {
     const content = fs.readFileSync(file, 'utf-8');
@@ -66,6 +38,28 @@ function analyzeAssetUsage() {
     const absoluteImgMatches = content.match(/src=["']\/assets\/img\/([^"']+)["']/g);
     if (absoluteImgMatches) {
       absoluteImgMatches.forEach(match => {
+        const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
+        if (pathMatch) {
+          usedAssets.add(`img/${pathMatch[1]}`);
+        }
+      });
+    }
+
+    // srcset属性からも抽出
+    const srcsetMatches = content.match(/srcset=["'][^"']*\/assets\/img\/([^"']+)["']/g);
+    if (srcsetMatches) {
+      srcsetMatches.forEach(match => {
+        const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
+        if (pathMatch) {
+          usedAssets.add(`img/${pathMatch[1]}`);
+        }
+      });
+    }
+
+    // source要素からも抽出
+    const sourceMatches = content.match(/<source[^>]+srcset=["'][^"']*\/assets\/img\/([^"']+)["'][^>]*>/g);
+    if (sourceMatches) {
+      sourceMatches.forEach(match => {
         const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
         if (pathMatch) {
           usedAssets.add(`img/${pathMatch[1]}`);
