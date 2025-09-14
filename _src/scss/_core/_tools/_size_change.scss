@@ -1,0 +1,46 @@
+//
+// ユーティリティ
+// ==================================================
+//
+
+// 引数に単位が付いている場合は単位を除去して数値のみ返却
+// --------------------------------------------------
+
+@use "sass:math";
+
+@function stripUnit($num) {
+	@if type-of($num) == 'number' and not unitless($num) {
+		@return math.div($num, 1);
+	}
+	@return $num;
+}
+
+
+// pxをremに変換
+// --------------------------------------------------
+// ルートのfont-sizeを16pxとし、62.5％で丸め込まずにpxをremに変換
+
+// 利用するときの記述
+// rem(18px)
+
+@function rem($px, $base: 16px) {
+	$val: $px;
+	// 単位がpx以外の場合は警告を出してそのまま返す
+	@if (unit($px) != 'px') {
+		@warn 'px以外の値は計算不可';
+		@return $val;
+	}
+	$val: calc((stripUnit($px) / stripUnit($base)) * 1rem);
+	@return $val;
+}
+
+
+// px => vw 変換
+// --------------------------------------------------
+$mobile: 360px;
+
+// 数値をpxとして扱いcalcにして返す
+@function vws($pxValue) {
+	$base: stripUnit($mobile);
+	@return unquote( (($pxValue / $base) * 100) + vw);
+}

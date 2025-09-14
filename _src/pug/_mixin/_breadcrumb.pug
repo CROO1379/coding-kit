@@ -1,0 +1,29 @@
+//-
+//- Breadcrumb NavXT（WordPressプラグイン）
+//- ==================================================
+//- 用法
+//- +breadcrumb(
+//- 	{ name: 'Category', dir: 'category' },
+//- 	{ name: 'Subcategory', dir: 'category/subcategory' },
+//- 	{ name: 'Current', dir: '' }
+//- )
+//-
+
+mixin breadcrumb(...items)
+	.breadcrumb(class!=attributes.class)
+		.l_inner
+			ul.breadcrumb_list(itemscope, itemtype="https://schema.org/BreadcrumbList")
+				li.breadcrumb_item(itemprop="itemListElement", itemscope, itemtype="https://schema.org/ListItem")
+					a.breadcrumb_link(href=page.root+"", itemprop="item")
+						span.breadcrumb_ttl(itemprop="name") HOME
+					meta(itemprop="position", content="1")
+
+				each item, index in items
+					if item.dir == ""
+						li.breadcrumb_item: span.breadcrumb_ttl #{ item.name }
+
+					else
+						li.breadcrumb_item(itemprop="itemListElement", itemscope, itemtype="https://schema.org/ListItem")
+							a.breadcrumb_link(href=page.root+`${item.dir}/`, itemprop="item")
+								span.breadcrumb_ttl(itemprop="name") #{ item.name }
+							meta(itemprop="position", content=`${index + 2}`)

@@ -1,0 +1,262 @@
+//
+// MARK: header
+// ==================================================
+// ヘッダーに存在する全てのオブジェクトをスタイリングする
+
+
+
+// MARK: サイトの主たるヘッダー
+// ==================================================
+
+.site_header {
+	position: relative;
+	padding-block: 16px;
+	padding-inline: 16px;
+	background-color: #fff;
+
+	// ヘッダー固定の場合のサンプル
+	// ------------------------------
+	// ヘッダーを固定する場合は、ドロワー開閉時のレイアウトシフト防止のために、
+	// マルチクラスで `.js_drawer_add_fixed` を付与する必要がある。
+	
+	// position: fixed;
+	// width: 100%;
+	// top: 0;
+	// left: 0;
+	// z-index: 1;
+}
+
+	.site_header__inner {
+		display: flex;
+		justify-content: space-between;
+		margin-inline: auto;
+		max-width: 940px;
+	}
+
+		// MARK: プライマリ領域
+		// --------------------------------------------------
+		.site_header__primary {}
+
+		// MARK: セカンダリ領域
+		// --------------------------------------------------
+		.site_header__secondary {}
+
+			// ナビゲーションレイアウトのためのボックス
+			.site_header__navs {
+				display: flex;
+				align-items: center;
+				column-gap: 1rem;
+			}
+				// ナビゲーション設置用のボックス
+				.site_header__nav {}
+
+
+// MARK: 絶対配置のボックス
+// --------------------------------------------------
+// 内部にドロワー開閉ボタンやSNSリンクなどを設置できる
+.site_fixed_box {
+	position: fixed;
+	display: block;
+	align-items: center;
+	z-index: 1000;
+	
+	&._pos_tr {
+		top: 20px;
+		right: 20px;
+	}
+	&._pos_rb {
+		right: 20px;
+		bottom: 20px;
+	}
+}
+
+
+
+
+// MARK: ブランディング
+// ==================================================
+
+.header_branding {}
+	.header_branding_inner {}
+
+	// `h1` もしくは ホームバック用の `a` タグに付与
+	.header_branding__title {
+		display: flex;
+		align-items: center;
+		line-height: 1.4;
+		gap: 1rem;
+	}
+
+		// ロゴ画像
+		// --------------------------------------------------
+		.header_branding__logo {
+			display: flex;
+			.image {
+				width: 42px;
+				height: auto;
+				.img {}
+			}
+		}
+
+		// サイト名（テキスト）
+		// --------------------------------------------------
+		.header_branding__name {
+			display: flex;
+			.text {}
+		}
+
+
+
+
+// MARK: リンクナビゲーション（main）
+// ==================================================
+
+.gnav_main {}
+	.gnav_main__inner {}
+
+	// リスト（`ul`相当）
+	// --------------------------------------------------
+	.gnav_main__items {
+		display: flex;
+		gap: 1rem;
+	}
+
+		// リスト項目（`li`相当）
+		// --------------------------------------------------
+		.gnav_main__item {}
+
+			// リンクのラッパー（`div`）
+			// --------------------------------------------------
+			// ドロップダウンがあるときは、このセルと並列に配置する
+			.gnav_main__link_cell {}
+
+				// リンク(`a`)
+				// --------------------------------------------------
+				.gnav_main__link {
+					display: block;
+					line-height: 1.4;
+					padding-block: 4px;
+					padding-inline: 10px;
+
+					transition: color 0.3s;
+					@media (any-hover: hover) and (pointer: fine) {
+						&:hover {
+							color: #555;
+						}
+					}
+						// アイコン
+						.icon {}
+						// テキスト
+						.text {}
+				}
+
+				// 下層メニュー開閉ボタン
+				// --------------------------------------------------
+				.gnav_main__switch {}
+					// ボタン（`button`）
+					// 開閉のためにマルチクラスで `js_**` を付与する
+					.gnav_main__switch_btn {
+						// アイコン
+						.icon {}
+						// テキスト
+						.text {}
+					}
+
+
+
+
+// MARK: プルダウンメニュー
+// ==================================================
+// ドロップダウンメニューのコンテナ部分
+
+.gnav_pulldown {}
+	.gnav_pulldown__header {}
+	.gnav_pulldown__body {}
+	.gnav_pulldown__footer {}
+
+
+
+
+// MARK: ドロワー開閉スイッチ
+// ==================================================
+// ドロワー用の開閉ボタンの外箱
+
+.header_drawer_switch {}
+
+
+
+
+// MARK: ドロワー開閉ボタン
+// ==================================================
+
+// ボタン
+// --------------------------------------------------
+.drawer_btn {
+	display: flex;
+	width: 42px;
+	height: 42px;
+	justify-content: center;
+	align-items: center;
+
+	// ダブルタップ時の拡大を防止
+	touch-action: manipulation;
+
+	@media (any-hover: hover) and (pointer: fine) {
+		&:hover {
+			.icon {
+				svg {
+					fill: #ddd;
+				}
+			}
+		}
+	}
+
+	// テキスト
+	// --------------------------------------------------
+	// メニューボタンのテキスト
+	.text {
+		// クリップによる非表示処理
+		@include clip_hide;
+	}
+
+	// アイコン
+	// --------------------------------------------------
+	.icon_cell {}
+		// アイコン
+		.icon {
+			display: block;
+			width: 26px;
+			height: 26px;
+			background: no-repeat center / contain;
+
+			// 初期表示のアイコン
+			&._icon_menu {
+				// アイコン fill色（#を除く、16進数のコード ／ ffcc00)
+				$icon_menu_color: 777777;
+				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M442 114H6a6 6 0 0 1-6-6V84a6 6 0 0 1 6-6h436a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6zm0 160H6a6 6 0 0 1-6-6v-24a6 6 0 0 1 6-6h436a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6zm0 160H6a6 6 0 0 1-6-6v-24a6 6 0 0 1 6-6h436a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6z" fill="%23#{$icon_menu_color}"/></svg>');
+			}
+
+			// 閉じるアイコン
+			&._icon_menu_close {
+				display: none;
+				
+				// アイコン fill色（#を除く、16進数のコード ／ ffcc00)
+				$icon_menu_close_color: 777777;
+				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--!Font Awesome Pro 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2024 Fonticons, Inc.--><path d="M345 137l17-17L328 86.1l-17 17-119 119L73 103l-17-17L22.1 120l17 17 119 119L39 375l-17 17L56 425.9l17-17 119-119L311 409l17 17L361.9 392l-17-17-119-119L345 137z" fill="%23#{$icon_menu_close_color}"/></svg>');
+			}
+
+		}
+
+	// アクティブ時
+	// --------------------------------------------------
+	&._is_active {
+		// 初期表示のアイコン
+		._icon_menu {
+			display: none;
+		}
+		// 閉じるアイコン
+		._icon_menu_close {
+			display: block;
+		}
+	}
+} // btn

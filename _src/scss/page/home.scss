@@ -1,0 +1,47 @@
+@charset "utf-8";
+
+@import "../_core/__list_core";
+
+
+//
+// MARK: HOME
+// ==================================================
+//
+
+
+// MARK: メインビジュアル
+// ==================================================
+
+.mv {}
+	.mv__inenr {}
+		.mv__image {
+			// ロードされるまでの間に表示する背景色
+			background-color: #4B5B64;
+
+			// スマートフォンのときの画像縦横比
+			aspect-ratio: 480 / 920;
+
+			// タブレットのときの画像縦横比
+			@media screen and ( min-width: 600px) {
+				aspect-ratio: 900 / 900;
+			}
+
+			// PCモニタのときの画像縦横比
+			@media screen and ( min-width: 960px) {
+				aspect-ratio: 1440 / 680;
+			}
+
+			.picture {
+				display: block;
+				aspect-ratio: inherit;
+
+				.img {
+					width: 100%; // 親の幅一杯に広げる
+				}
+			}
+		}
+
+
+
+// MARK: ※セクション名
+// ==================================================

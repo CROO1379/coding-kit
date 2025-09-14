@@ -1,0 +1,29 @@
+//-
+//- パンくずリスト
+//- ==================================================
+//- 用法
+//- +topic_path(
+//- 	{ name: 'Category', dir: 'category' },
+//- 	{ name: 'Subcategory', dir: 'category/subcategory' },
+//- 	{ name: 'Current', dir: '' }
+//- )
+//-
+
+mixin topic_path(...items)
+	.topic_path(class!=attributes.class)
+		.topic_path__inner
+			ul.topic_path__list(itemscope, itemtype="https://schema.org/BreadcrumbList")
+				li.topic_path__item(itemprop="itemListElement", itemscope, itemtype="https://schema.org/ListItem")
+					a.topic_path__link(href=page.root+"", itemprop="item")
+						span.text(itemprop="name") HOME
+					meta(itemprop="position", content="1")
+
+				each item, index in items
+					if item.dir == ""
+						li.topic_path__item: span.text #{ item.name }
+
+					else
+						li.topic_path__item(itemprop="itemListElement", itemscope, itemtype="https://schema.org/ListItem")
+							a.topic_path__link(href=page.root+`${item.dir}/`, itemprop="item")
+								span.text(itemprop="name") #{ item.name }
+							meta(itemprop="position", content=`${index + 2}`)

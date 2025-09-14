@@ -1,0 +1,25 @@
+//
+// Noto Serif Japanese ／ バリアブル
+// ==================================================
+// バリブルフォントの読み込み
+// モダンブラウザのみを対象とする場合は、 ttf , woff の指定は削除すること
+//
+
+// .noto-serif-jp {
+//	font-family: "Noto Serif JP", serif;
+//	font-optical-sizing: auto;
+//	font-weight: 数値; // 100 〜 900
+//	font-style: normal;
+// }
+
+
+@font-face {
+	font-display: swap;
+	font-family: 'Noto Serif JP';
+	font-style: normal;
+	font-weight: 100 900;
+	src:
+		url('../fonts/variable/noto-serif-jp/NotoSerifJP-VariableFont_wght.woff2') format('woff2'),
+		url('../fonts/variable/noto-serif-jp/NotoSerifJP-VariableFont_wght.woff') format('woff'),
+		// url('../fonts/variable/noto-serif-jp/NotoSerifJP-VariableFont_wght.ttf') format('truetype'),
+}

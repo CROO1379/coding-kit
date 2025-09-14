@@ -1,0 +1,47 @@
+doctype html
+
+block vars
+
+html(lang="ja")
+
+	include ./_head.pug
+	include ../_mixin/__list_mixin.pug
+
+
+	body( class='pg-'+page.slug )
+		.site_ftame
+			.site_frame__inner
+
+				// Google Tag Manager (noscript)
+
+				//- ヘッダー
+				include ./_header.pug
+
+				//- コンテンツ出力エリア
+				block contents
+
+				//- フッター
+				include ./_footer.pug
+
+		//- ドロワーメニュー
+		include ./_drawer.pug
+
+
+		block ft_js
+			// JavaScript
+
+			//- 外部製のコア系JS
+			//- --------------------------------------------------
+			//- コア系のJSファイル。全域で利用しない場合は、`page.slug` で判定して出し分ける。
+			//- script(src=page.js+"vendor/jquery-3.7.1.js" defer)
+			//- script(src=page.js+"vendor/gsap-3.12.5.js" defer)
+			//- script(src=page.js+"vendor/ScrollTrigger-3.12.5.js" defer)
+
+			//- サイト共通のJS
+			//- --------------------------------------------------
+			script(src=page.js+"main.js" defer)
+
+			//- ページ個別のJS
+			//- --------------------------------------------------
+			//- ※ページ個別のJSは、各ページの `append ft_js` 指定により末尾に追加される
+

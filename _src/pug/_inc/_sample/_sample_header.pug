@@ -1,0 +1,112 @@
+//-
+//- サイトヘッダー
+//- ==================================================
+//- サイトヘッダーのサンプルコード
+//-
+
+//- if page.slug == 'home'
+
+header.site_frame__header
+	.site_header
+		.site_header__inner
+
+			//- MARK: プライマリ領域
+			//- --------------------------------------------------
+			.site_header__primary
+				//- ブランディングエリア
+				// branding
+				.header_branding
+					.header_branding__inner
+						//- トップページの場合
+						if page.slug == 'home'
+							h1.header_branding__title
+								span.header_branding__logo
+									span.image
+										img.img( src=page.img+"common/logo_header.webp" alt="" width="" height="" decoding="async" fetchpriority="high")
+								span.header_branding__name
+									span.text サイト名
+						//- トップページ以外の場合
+						else
+							a.header_branding__title( href=page.root )
+								span.header_branding__logo
+									span.image
+										img.img( src=page.img+"common/logo_header.webp" alt="" width="" height="" decoding="async" fetchpriority="high")
+								span.header_branding__name
+									span.text サイト名
+
+			//- MARK: セカンダリ領域
+			//- --------------------------------------------------
+			.site_header__secondary
+				//- ナビゲーションのエリア
+				nav.site_header__navs(aria-label="グローバルナビゲーション")
+
+					.site_header__nav
+
+						//- MARK: グローバルナビゲーション
+						//- --------------------------------------------------
+						// gnav_main
+						.gnav_main
+							.gnav_main__inner
+								ul.gnav_main__items
+
+									// nav_item
+									li.gnav_main__item
+										.gnav_main__link_cell
+											a.gnav_main__link( href=page.root+"subpage/" )
+												span.text Link-text
+
+									// nav_item
+									li.gnav_main__item
+										.gnav_main__link_cell
+											a.gnav_main__link( href=page.root+"subpage/" )
+												span.text Link-text
+									
+									// nav_item
+									li.gnav_main__item
+										.gnav_main__link_cell
+											a.gnav_main__link( href=page.root+"subpage/" )
+												span.text Link-text
+
+					//- ナビゲーションのボックス
+					.site_header__nav
+						//- MARK: ドロワーメニュー開閉ボタン
+						button.drawer_btn( type="button" ).js_drawer_toggle
+							//- CSSでクリップする前提のテキスト
+							span.text ドロワーメニューの開閉
+							//- アイコン
+							span.icon_cell
+								span.icon._icon_menu( aria-hidden="true" )
+								span.icon._icon_menu_close( aria-hidden="true" )
+
+
+	//- 固定配置用のボックス-右上
+	.site_fixed_box._pos_tr.js_drawer_add_fixed
+		//- MARK: ドロワーメニュー開閉ボタン
+		button.drawer_btn( type="button" ).js_drawer_toggle
+			//- CSSでクリップする前提のテキスト
+			span.text ドロワーメニューの開閉
+			//- アイコン
+			span.icon_cell
+				span.icon._icon_menu( aria-hidden="true" )
+				span.icon._icon_menu_close( aria-hidden="true" )
+
+	//- 固定配置用のボックス-右下
+	.site_fixed_box._pos_rb.js_drawer_add_fixed
+		//- MARK: ドロワーメニュー開閉ボタン
+		button.drawer_btn( type="button" ).js_drawer_toggle
+			//- CSSでクリップする前提のテキスト
+			span.text ドロワーメニューの開閉
+			//- アイコン
+			span.icon_cell
+				span.icon._icon_menu( aria-hidden="true" )
+				span.icon._icon_menu_close( aria-hidden="true" )
+
+
+//- トップページ（HOME）以外のヘッダー
+//- ---------------------------------------------------
+//- else
+//- .site_header-subpage
+//- 	.site_header-subpage__inenr
+//- 		.site_header-subpage__primary
+//- 		.site_header-subpage__secondary
+

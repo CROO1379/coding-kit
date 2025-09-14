@@ -1,0 +1,151 @@
+//
+// MARK: ドロワーメニュー
+// ==================================================
+// ドロワーメニューのcontainer
+
+
+
+// MARK: 背面のスクリーン
+// ==================================================
+// ドロワーの背景で網掛けに利用する／ドロワー本体のラッパーとして設置
+
+.drawer_screen {
+	// 初期表示は非表示
+	opacity: 0;
+	visibility: hidden;
+	background-color: rgb(0 0 0 / 40%); // 全面メニューの場合は削除する
+
+	// スクリーンを全面に広げる
+	width: 100vw;
+	height: 100dvh;
+
+	// 位置決め
+	position: fixed;
+	inset: 0;
+	margin: auto;
+	z-index: 100;
+
+	// 表示用アニメーション設定
+	transition:
+		opacity 0.3s ,
+		visibility 0.3s;
+
+	// 表示処理
+	&._is_open { // jsから付与されるClass
+		opacity: 1;
+		visibility: visible;
+	}
+
+}
+
+
+// MARK: ドロワーのコンテナ
+// ==================================================
+.drawer {
+	// 初期表示は非表示
+	opacity: 0;
+	visibility: hidden;
+	background-color: #f5f5f5;
+
+	// スマートフォンの時のサイズ
+	width: 100vw;
+	height: 100dvh;
+	
+	// タブレット
+	@include min-screen( $tablet ) {
+		width: 60vw;
+	}
+
+	// 位置決め
+	position: fixed;
+	top: 0;
+	right: 0;
+	z-index: 101;
+	translate: 100% 0;
+
+	// 表示用アニメーション設定
+	transition:
+		translate 0.3s ,
+		opacity 0.3s ,
+		visibility 0.3s;
+
+	// 表示処理
+	&._is_open { // jsから付与
+		opacity: 1;
+		visibility: visible;
+		translate: 0 0;
+	}
+}
+
+	.drawer__inner {}
+
+
+	// MARK: ヘッダー領域
+	// ==================================================
+	.drawer__header {
+		padding: 0.5em 1.5em;
+	}
+		.drawer__header_inner {
+			display: flex;
+		}
+			// ドロワーの表題
+			.drawer__heading {
+				font-size: 20px;
+				flex: 1;
+				.text {}
+			}
+
+
+
+	// MARK: ボディ部領域
+	// ==================================================
+	.drawer__body {}
+
+		// スクロール要素 
+		.drawer__scroller {
+			height: 80vh; // ※サンプル用設定
+			overflow-y: auto;
+
+			// PC表示時のスクロールバーをカスタマイズ
+			&::-webkit-scrollbar {
+				width: 8px;
+			}
+			&::-webkit-scrollbar-track {
+				background-color: transparent;
+			}
+			&::-webkit-scrollbar-thumb {
+				background-color: #ddd;
+				border-radius: 999em;
+			}
+		}
+
+
+
+	// MARK: フッター部
+	// ==================================================
+	.drawer__footer {}
+		.drawer__footer_inner {}
+
+
+
+// MARK: リンクナビゲーション
+// ==================================================
+
+.dnav_main {
+	height: 200vh; // ※サンプル用設定
+}
+
+	.dnav_main__inner {}
+
+		.dnav_main__items {
+			padding-inline: 26px;
+		}
+			// リンク項目
+			.dnav_main__item {}
+
+				// リンク
+				.dnav_main__link {}
+
+
+
+

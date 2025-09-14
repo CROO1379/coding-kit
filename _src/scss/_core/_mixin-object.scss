@@ -1,0 +1,40 @@
+//
+// MARK: このサイト用のMixin
+// ==================================================
+// このサイトで共通利用するMixin
+//
+
+
+// セクションのコンテナ
+// --------------------------------------------------
+// セクションの外枠や、その他任意の要素に指定
+
+// 利用する時の記述
+// @include default_container();
+@mixin default_container() {
+	padding-inline: 20px; // モバイル時の余白指定
+	
+	@include min-screen( $mobile_L ) { // 400
+		padding-inline: 30px;
+	}
+	@include min-screen( $tablet ) { // 600px
+		padding-inline: 40px;
+	}
+	@include min-screen( $laptop ) { // 960px
+		padding-inline: 60px;
+	}
+
+}
+
+// 幅制御用のインナー
+// --------------------------------------------------
+// 最大幅を指定して中央揃えする指定
+
+// 利用する時の記述
+// @include default_container_inner();
+@mixin default_container_inner() {
+	max-width: 1440px; // 最大幅を指定する
+	margin-inline: auto;
+}
+
+

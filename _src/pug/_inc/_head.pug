@@ -1,0 +1,54 @@
+head
+
+	// Document
+	meta(charset="utf-8")
+	title #{meta.title}
+	meta(name="description" content=meta.description)
+
+	// Browser
+	meta(http-equiv="X-UA-Compatible", content="IE=edge")
+	meta(name="viewport", content="width=device-width, initial-scale=1.0")
+	meta(name="format-detection", content="telephone=no")
+
+	// OGP
+	meta(property="og:url" content=page.url)
+	meta(property="og:site_name" content=site.name)
+	meta(property="og:title" content=meta.title)
+	meta(property="og:description" content=meta.description)
+	meta(property="og:image" content=site.url + "assets/img/ogimage.png")
+	meta(property="og:type", content=site.ogtype)
+	meta(property="og:locale", content="ja_JP")
+
+	//- twitter
+	meta(name="twitter:card" content="summary_large_image")
+	meta(name="twitter:title" content=meta.title)
+	meta(name="twitter:description" content=meta.description)
+	meta(name="twitter:image" content=site.url + "assets/img/ogimage.png")
+
+	//- 各ページのプリリード設定が以下に出力される
+	block preload
+
+	// Link
+	block css
+
+		//- 共通のCSS
+		link(rel="stylesheet", href=page.css+"global.css")
+
+		//- ページごとのCSS
+		link( rel="stylesheet" href=page.css+ 'page/' +page.css_slug+'.css' )
+
+		//- フォントのCSS（※LPなどで、フォントデータを遅延ロードしたい場合に利用する）
+		//- link( rel="preload" href=page.css+"fonts.css" as="style" onload="this.onload=null;this.rel='stylesheet'")
+		//- noscript
+		//- 	link( rel="stylesheet" href=page.css+"fonts.css" )
+
+
+	// favicon / icon
+	link(rel="icon" href=page.root+"favicon.ico")
+	link(rel="icon" type="image/png" href=page.root+"favicon.png")
+	link(rel="apple-touch-icon" href=page.root+"apple-touch-icon.png")
+
+
+	// Google Tag Manager
+	//- タグマネージャー コードの貼り付け
+

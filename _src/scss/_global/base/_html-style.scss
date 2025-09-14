@@ -1,0 +1,142 @@
+//
+// MARK: HTML Elements
+// ==================================================
+// このプロジェクト固有の、プレーンなHTML要素に対する基本スタイルを記述する。
+// idやclassセレクタは記述してはならない。
+//
+// フォーマット用CSS（リセットCSSやノーマライズCSS）とは役割が異なる。
+//
+
+
+// MARK: 文書全体
+// ==================================================
+
+html {
+	// フォントサイズ指定をブラウザに任せる場合には削除を検討
+	// 明示的に他のサイズに変更する場合は、`tools/_function.scss` の
+	// フォントサイズ変換の計算式も再検討すること
+	// font-size: 16px;
+}
+
+body {
+	-webkit-font-smoothing: antialiased;
+	overflow-y: scroll;
+	font-family: "Noto Sans JP", sans-serif;
+	font-weight: 500;
+	line-height: 1.8;
+	color: #000;
+	background-color: #fff;
+}
+
+// キーボード操作のフォーカスリング（tabキー操作時）
+*:focus-visible {
+	outline: 3px solid #1073d0 !important; // プラグインの指定があっても上書きする
+	outline-offset: -3px !important;
+}
+
+
+// MARK: 領域
+// ==================================================
+
+nav {
+	ul,ol {
+		list-style: none;
+	}
+
+	a {
+		text-decoration: none;
+	}
+}
+
+
+
+// MARK: 見出し
+// ==================================================
+
+// 全ての見出しを一旦リセット
+h1, h2, h3, h4, h5, h6 {
+	font-weight: unset;
+}
+
+// 見出しレベル別の設定
+h1 {}
+h2 {}
+h3 {}
+h4 {}
+h5 {}
+h6 {}
+
+
+
+// MARK: テキスト
+// ==================================================
+
+small {
+	font-size: 75%;
+}
+
+em {
+	font-style: normal;
+}
+
+code {
+	// display: inline-block;
+	// padding: 0 0.5em;
+	// line-height: 1.4;
+	// background-color: #eee;
+}
+
+
+
+// MARK: 画像
+// ==================================================
+
+img {
+	display: block;
+	max-width: 100%; // 画像の最大幅より拡大しない
+	height: auto; // アスペクト比を維持
+	// 画像下方の不要な余白を取る（base側で指定があれば不要）
+	// vertical-align: bottom;
+}
+
+
+// MARK: リンク
+// ==================================================
+
+a {
+	color: #4197d6;
+}
+a :hover {}
+a :visited {}
+a :active {}
+a :focus {}
+
+
+
+// MARK: テーブル
+// ==================================================
+
+table {
+	border-spacing: 0;
+	// ボーダーを重ねる
+	border-collapse: collapse;
+}
+
+
+// MARK: フォーム部品
+// ==================================================
+//
+
+label {
+	display: inline-block;
+	cursor: pointer;
+}
+
+
+// MARK: その他
+// ==================================================
+hr {
+	margin: 2rem 0;
+	background: #ddd;
+	border-color: #ccc;
+}

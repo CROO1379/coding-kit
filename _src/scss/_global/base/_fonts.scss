@@ -1,0 +1,56 @@
+@charset "utf-8";
+
+//
+// MARK: Web Fonts
+// ==================================================
+// Webフォントはセルフホスティングを標準とし、このファイルをマスターの設定ファイルとする。
+// フォントそのもののデータは、 `/assets/fonts/` に格納する。
+//
+
+
+
+// Variable （バリアブル・フォント）
+// ==================================================
+// フォント可変のフォントの利用
+
+// 日本語
+// --------------------------------------------------
+
+// Noto Sans（ゴシック）
+@import "./_fonts/variable/noto-sans-jp-vf";
+
+// Noto Serif（明朝）
+// @import "./_fonts/variable/noto-serif-jp-vf";
+
+
+// 欧文
+// --------------------------------------------------
+// @import "./_fonts/variable/montserrat-vf";
+
+
+
+
+// Static （スタティック・フォント）
+// ==================================================
+// フォントウェイトごとにファイル化されたフォントの利用
+
+// 日本語
+// --------------------------------------------------
+
+// Zen Kaku Gothic New
+// フルセット
+// @import "./_fonts/static/zen-kaku-gothic-new";
+// サブセット
+// @import "./_fonts/static/subset/zen-kaku-gothic-new";
+
+// Zen Old Mincho
+// フルセット
+// @import "./_fonts/static/zen-old-mincho";
+// サブセット
+// @import "./_fonts/static/subset/zen-old-mincho";
+
+
+// 欧文
+// --------------------------------------------------
+
+

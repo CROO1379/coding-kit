@@ -1,0 +1,200 @@
+//
+// Mixin（汎用）
+// ==================================================
+
+
+// 非表示設定
+// --------------------------------------------------
+// アイコンのみのボタンなど、スクリーンリーダーでテキストの読み上げを残しつつ、
+// テキストのみを非表示にしたい場合に利用する。
+
+// クリップによる非表示処理
+// @include clip_hide;
+
+@mixin clip_hide {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(1px, 1px, 1px, 1px);
+	clip-path: inset(100%);
+	white-space: nowrap;
+}
+
+
+// ホバー
+// --------------------------------------------------
+// 仕様するときの指定
+// @include hover {
+// 	color: blue;
+// }
+
+@mixin hover {
+	@media (any-hover: hover) and (pointer: fine) {
+		&:hover{
+			@content;
+		}
+	}
+}
+
+
+// ※既存の設定を残留
+// ==================================================
+
+@mixin placeholderColor($color) {
+	&:placeholder-shown {
+	    color: $color;
+	}
+	// &::-webkit-input-placeholder {
+	//     color:$color;
+	// }
+	// &:-moz-placeholder {
+	//     color:$color;
+	//     opacity: 1;
+	// }
+	// &::-moz-placeholder {
+	//     color:$color;
+	//     opacity: 1;
+	// }
+	// &:-ms-input-placeholder {
+	//     color:$color;
+	// }
+}
+
+// 背景画像
+@mixin fit-image ($img_path, $size) {
+	background-image: url($img_path);
+	background-position: center;
+	background-size: $size;
+	background-repeat: no-repeat;
+}
+
+// フォントアンチエイリアス
+@mixin font-smoothing {
+	-webkit-font-smoothing: antialiased;
+	// -moz-font-smoothing: antialiased;
+	// font-smoothing: antialiased;
+	// -moz-osx-font-smoothing: grayscale;
+}
+
+// 矢印
+@mixin arrow ($width, $height, $color) {
+	content: "";
+	border-top: 1px solid;
+	border-right: 1px solid;
+	width: $width;
+	height: $height;
+	border-color: $color;
+}
+
+// ボックスシャドウ
+@mixin box-shadow( $h: 10px , $v: 10px , $b: 0px , $s: 0px , $c: #000000 ) {
+	// -webkit-box-shadow: $h $v $b $s $c;
+	// -moz-box-shadow: $h $v $b $s $c;
+	box-shadow: $h $v $b $s $c;
+}
+
+
+//ローテート
+@mixin rotate($values) {
+    transform: rotate($values);
+	// -moz-transform: rotate($values);
+	// -webkit-transform: rotate($values);
+	// -o-transform: rotate($values);
+	// -ms-transform: rotate($values);
+}
+
+
+// フレックスボックス
+@mixin flexbox {
+	// display:-webkit-box; // old
+	// display:-moz-box; // old
+	// display:-ms-flexbox; // ie
+	// display:-webkit-flex; // new
+	display:flex; // new
+}
+
+// モダンブラウザの旧仕様にも対応したflexの指定
+@mixin flex($values) {
+	// -webkit-box-flex: $values;
+	// -moz-box-flex: $values;
+	// -ms-flex: $values;
+	// -webkit-flex: $values;
+	flex: $values;
+}
+
+// flex-order（表示の順番）
+@mixin flex-order($order){
+	// -webkit-box-ordinal-group: $order; // old
+	// -moz-box-ordinal-group: $order; // old
+	// -ms-flex-order: $order; // ie
+	// -webkit-order: $order; // new
+	order: $order; // new
+}
+
+@mixin align-items($values) {
+    // -webkit-align-items:$values;
+    // -moz-align-items:$values;
+    align-items:$values;
+}
+
+@mixin justify-content($values) {
+    // -webkit-justify-content:$values;
+    // -moz-justify-content:$values;
+    justify-content:$values;
+}
+
+// グラデーション　（水平・垂直・円）
+@mixin gradient($start-color, $end-color, $orientation) {
+	background: $start-color;
+	@if $orientation == vertical {
+		// vertical
+		// background: -moz-linear-gradient(top, $start-color 0%, $end-color 100%);
+		// background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,$start-color), color-stop(100%,$end-color));
+		// background: -webkit-linear-gradient(top, $start-color 0%,$end-color 100%);
+		// background: -o-linear-gradient(top, $start-color 0%,$end-color 100%);
+		// background: -ms-linear-gradient(top, $start-color 0%,$end-color 100%);
+		background: linear-gradient(to bottom, $start-color 0%,$end-color 100%);
+		// filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='$start-color', endColorstr='$end-color',GradientType=0 );
+	}
+	@else if $orientation == horizontal	{
+		// horizontal
+		// background: -moz-linear-gradient(left, $start-color 0%, $end-color 100%);
+		// background: -webkit-gradient(linear, left top, right top, color-stop(0%,$start-color), color-stop(100%,$end-color));
+		// background: -webkit-linear-gradient(left, $start-color 0%,$end-color 100%);
+		// background: -o-linear-gradient(left, $start-color 0%,$end-color 100%);
+		// background: -ms-linear-gradient(left, $start-color 0%,$end-color 100%);
+		background: linear-gradient(to right, $start-color 0%,$end-color 100%);
+		// filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='$start-color', endColorstr='$end-color',GradientType=1 );
+	}
+	@else {
+		// radial
+		// background: -moz-radial-gradient(center, ellipse cover, $start-color 0%, $end-color 100%);
+		// background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,$start-color), color-stop(100%,$end-color));
+		// background: -webkit-radial-gradient(center, ellipse cover, $start-color 0%,$end-color 100%);
+		// background: -o-radial-gradient(center, ellipse cover, $start-color 0%,$end-color 100%);
+		// background: -ms-radial-gradient(center, ellipse cover, $start-color 0%,$end-color 100%);
+		background: radial-gradient(ellipse at center, $start-color 0%,$end-color 100%);
+		// filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='$start-color', endColorstr='$end-color',GradientType=1 );
+	}
+}
+
+
+@mixin vertical_text {
+	// -webkit-writing-mode: vertical-rl;
+	// -ms-writing-mode: tb-rl;
+	// -o-writing-mode: vertical-rl;
+	writing-mode: vertical-rl;
+	// writing-mode: tb-rl; /* IE */
+	writing-mode: vertical-rl; /* Chrome */
+	white-space: nowrap;
+}
+
+@mixin maker {
+	background-image: -webkit-linear-gradient(rgba(255,255,255,0) 85%, #FFBB22 0%);
+	background-image: -o-linear-gradient(rgba(255,255,255,0) 85%, #FFBB22 0%);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(85%, rgba(255,255,255,0)), color-stop(0%, #FFBB22));
+	background-image: linear-gradient(rgba(255,255,255,0) 85%, #FFBB22 0%);
+}
+
+

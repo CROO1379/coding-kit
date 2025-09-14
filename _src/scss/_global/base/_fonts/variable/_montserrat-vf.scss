@@ -1,0 +1,25 @@
+//
+// Montserrat（モンセラート）／バリアブル
+// ==================================================
+// バリブルフォントの読み込み
+// オールドブラウザも対象とする場合は、 ttf の行のコメントアウトを解除する
+//
+
+// .montserrat-vf {
+//	font-family: "Montserrat", sans-serif;
+//	font-optical-sizing: auto;
+//	font-weight: 数値; // 100 〜 900
+//	font-style: normal;
+// }
+
+
+@font-face {
+	font-display: swap;
+	font-family: 'Montserrat';
+	font-style: normal;
+	font-weight: 100 900;
+	src:
+		url('../fonts/variable/montserrat/Montserrat-VariableFont_wght.woff2') format('woff2'),
+		url('../fonts/variable/montserrat/Montserrat-VariableFont_wght.woff') format('woff'),
+		// url('../fonts/variable/montserrat/Montserrat-VariableFont_wght.ttf') format('truetype'),
+}

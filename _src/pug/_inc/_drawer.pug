@@ -1,0 +1,81 @@
+//-
+//- MARK: ドロワーメニュー
+//- ==================================================
+//-
+
+
+//- 背景用スクリーン（必ず親にする）
+.drawer_screen
+
+	//- ドロワーメニューの開閉用コンテナ
+	nav.drawer(aria-label="ドロワーメニュー")
+
+		.drawer__inner
+
+			//- ドロワーコンテナのヘッダー部
+			//- ==================================================
+			//- 表題や閉じるボタンなどの配置
+			.drawer__header
+				.drawer__header_inner
+					//- 表題部分
+					h2.drawer__heading
+						span.text MENU
+
+
+			//- ドロワーコンテナのボディ部
+			//- ==================================================
+			//- リンクメニューの配置
+			.drawer__body
+
+				//- 高さが足りなかった場合のスクロール用ラッパー
+				.drawer__scroller
+
+					//- ドロワー用ナビゲーション： メイン
+					.dnav_main.js_drawer_add_active
+						.dnav_main__inner
+							ul.dnav_main__items
+
+								li.dnav_main__item
+									a.dnav_main__link( href=page.root+"subpage" )
+										span.text Link-text
+										span.icon( aria-hidden="true" )
+
+								li.dnav_main__item
+									a.dnav_main__link( href=page.root+"subpage" )
+										span.text Link-text
+										span.icon( aria-hidden="true" )
+
+								li.dnav_main__item
+									a.dnav_main__link( href=page.root+"subpage" )
+										span.text Link-text
+										span.icon( aria-hidden="true" )
+
+								li.dnav_main__item
+									a.dnav_main__link( href="#anker_test_1" )
+										span.text 同ページ アンカーテスト-1（#anker_test_1）
+										span.icon( aria-hidden="true" )
+
+								li.dnav_main__item
+									a.dnav_main__link( href="#anker_test_2" )
+										span.text 同ページ アンカーテスト-2（#anker_test_2）
+										span.icon( aria-hidden="true" )
+
+								li.dnav_main__item
+									a.dnav_main__link( href="#" )
+										span.text ページTOP（アンカー）
+										span.icon( aria-hidden="true" )
+
+
+
+			//- ドロワーコンテナのフッター部
+			//- ==================================================
+			//- CTA系やSNSリンク、閉じるボタンなどの配置
+			.drawer__footer
+				.drawer__footer_inner
+
+					//- 閉じるボタン
+					.drawer__footer_switch
+						button.drawer_close( type="button" ).js_drawer_close
+							//- CSSで非表示にする前提のテキスト
+							span.text ドロワーメニューを閉じる
+							span.icon( aria-hidden="true" )

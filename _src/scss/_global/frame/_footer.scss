@@ -1,0 +1,58 @@
+//
+// MARK: footer
+// ==================================================
+// フッターに存在する全てのオブジェクトをスタイリングする
+
+
+
+// MARK: サイトの主たるフッター
+// ==================================================
+
+.site_footer {
+	background-color: #333;
+	padding-block: 6em;
+	padding-inline: 16px;
+}
+	.site_footer__inner {
+		margin-inline: auto;
+		max-width: 940px;
+	}
+
+		// 大枠のレイアウトに利用する要素
+		// ==================================================
+		// .site_footer__top {}
+		// .site_footer__middle {}
+		// .site_footer__middle {}
+
+		// .site_footer__primary {}
+		// .site_footer__secondary {}
+
+
+
+	// MARK: ブランディング
+	// --------------------------------------------------
+	.footer_branding {}
+		.footer_branding__inner {}
+			// ロゴ画像
+			.footer_branding__logo {}
+			// サイト名
+			.footer_branding__name{
+				color: #fff;
+			}
+
+
+	// MARK: サイトマップ
+	// --------------------------------------------------
+	.footer_sitemap {}
+
+
+	// MARK: 連絡先情報
+	// --------------------------------------------------
+	.footer_address {}
+
+
+	// MARK: コピーライト
+	// --------------------------------------------------
+	.footer_copyright {}
+
+

@@ -1,0 +1,10 @@
+//-
+//- ボタン
+//- ==================================================
+//- 用法
+//- +btn('/contact', 'お問い合わせ')(class='special-btn')(target='_blank')
+//-
+
+mixin btn(href,text)
+	a.btn(class!=attributes.class)(href=href)(target!=attributes.target)
+		span.text !{text}

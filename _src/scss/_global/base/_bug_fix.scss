@@ -1,0 +1,15 @@
+//
+// MARK: バグ回避用
+// ==================================================
+//
+
+// SafariのCalc内でvwが再計算されないバグを回避
+// --------------------------------------------------
+_::-webkit-full-page-media, _:future, :root , body {
+	-webkit-animation: safariFix 1s forwards infinite;
+}
+@-webkit-keyframes safariFix {
+	100% {
+		z-index: 1;
+	}
+}

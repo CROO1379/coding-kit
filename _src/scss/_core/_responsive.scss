@@ -1,0 +1,77 @@
+//
+// MARK: レスポンシブ設定
+// ==================================================
+// ブレイクポイントと、レスポンシブ用のMixin
+//
+
+// 用法
+// @include min-screen($tablet) {}
+
+
+// ブレイクポイント
+// ==================================================
+// ブレイクポイントの定数化
+
+$mobile_S		: 320px;
+$mobile			: 360px; // メイン
+$mobile_L		: 400px;
+
+$tablet_S		: 520px;
+$tablet			: 600px; // メイン
+$tablet_L		: 768px;
+
+$laptop_S		: 840px;
+$laptop			: 960px; // メイン
+$laptop_L		: 1080px;
+
+$desktop_S	: 1152px;
+$desktop		: 1280px; // メイン
+$desktop_L	: 1366px;
+
+
+
+// レスポンシブ指定のMixin
+// ==================================================
+
+
+// Min指定（大きい方への指定）MBファースト
+// --------------------------------------------------
+// 利用時のコード
+// @include min-screen($tablet) {}
+// @include min-screen(960) {}
+@mixin min-screen($break-point) {
+	@media screen and (min-width: $break-point) {
+		@content;
+	}
+}
+
+// Max指定（小さい方への指定）PCファースト
+// --------------------------------------------------
+
+// 利用時のコード
+// @include max-screen($tablet - 1) {}
+// @include max-screen(960) {}
+@mixin max-screen($break-point) {
+	@media screen and (max-width: $break-point) {
+		@content;
+	}
+}
+
+// 範囲指定
+// --------------------------------------------------
+
+// 利用時のコード
+// @include max-screen(960 , 1280) {}
+@mixin screen($break-point-min, $break-point-max) {
+	@media screen and (min-width: $break-point-min) and (max-width: $break-point-max) {
+		@content;
+	}
+}
+
+// 利用時のコード
+// @include max-screen(960 , 1280) {}
+@mixin max-device-width($max-width, $max-device-width) {
+	@media only screen and (max-width: $max-width) and (max-device-width:$max-device-width){
+		@content;
+	}
+}

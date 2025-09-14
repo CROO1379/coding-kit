@@ -1,0 +1,53 @@
+@charset "utf-8";
+
+
+//
+// MARK: global
+// ==================================================
+// 全ページで必ずインポートする共通のCSS
+//
+
+// 変数やMixinなど
+@import "./_core/__list_core.scss";
+
+
+
+// MARK: Bass
+// --------------------------------------------------
+// 要素型セレクタ
+
+// サードパーティのフォーマット用CSS
+@import "./_global/base/format";
+
+// このサイト用の要素型セレクタ
+@import "./_global/base/html-style";
+
+// バグ回避用
+@import "./_global/base/bug_fix";
+
+// フォント
+@import "./_global/base/fonts";
+
+// CSSカスタム変数
+@import "./_global/base/css_variables";
+
+
+
+// MARK: Frame
+// --------------------------------------------------
+
+// ヘッダー、フッター、ナビゲーションなどの「フレーム」領域の部品
+@import "./_global/frame/__list_frame";
+
+
+
+// MARK: Contents
+// --------------------------------------------------
+
+// サイト全域で利用する「コンテンツ」領域の部品
+@import "./_global/contents/__list_contents";
+
+// トップページのファーストビュー部分
+// Googleスピードインサイトのレイアウトシフト対策でインポートしたい場合に利用する
+// @import "./_global/contents/_first_view";
+

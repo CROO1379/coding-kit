@@ -1,0 +1,158 @@
+//
+// MARK: 汎用的なアコーディオン
+// ==================================================
+//
+
+// アコーディオンひとつ分のボックス
+// --------------------------------------------------
+.accordion {
+	background-color: transparent;
+	border-top: solid 1px #646464;
+	border-bottom: solid 1px #646464;
+
+	+ .accordion { // 連続した要素のスタイル
+		border-top: initial;
+	}
+	
+	// MARK: アクティブ処理
+	// --------------------------------------------------
+
+	// アクティブ識別class
+	// → クリックした瞬間と、初期の`details`が`open`になっている要素に付与される
+	&._is_active {
+		.accordion__header {
+			// 開いたときの表示を調整
+			margin-bottom: -20px; // 後続するコンテンツのボックスを上に移動させる
+		}
+	}
+
+	// `detail` が開いたときの処理
+	// → JSの処理上、少し遅れて `open` が付与される
+	&[open] {
+		// 開閉を示唆するアイコン
+		.icon_toggle {
+			&::after {
+				opacity: 0; // ＋ アイコンの縦棒を削除
+			}
+		}
+	}
+}
+
+	// MARK: ヘッダー部分
+	// --------------------------------------------------
+	.accordion__header { // `summary` タグ
+		position: relative;
+		padding-block: 50px;
+		padding-inline: 30px 60px;
+		cursor: pointer;
+
+		// `summary` タグのデフォルトの三角マークを非表示にする
+		list-style: none;
+		&::-webkit-details-marker {
+			display: none; // Safari用
+		}
+
+		// 開閉示唆用のアイコン
+		.icon_toggle {
+			position: absolute;
+			width: 21px;
+			height: 21px;
+			top: 50%;
+			translate: 0 calc( -50% - 0.5px ); // ボケないように調整
+			right: 40px;
+
+			// アイコンの作成
+			&::before , &::after {
+				content: "";
+				display: block;
+				width: inherit;
+				height: 1px;
+				background-color: #999;
+				position: absolute;
+				left: 0px;
+				// ホバーアニメーション用
+				transition: opacity 0.3s , background-color 0.3s;
+			}
+			// 横棒
+			&::before {
+				top: calc( 50% - 0px);
+			}
+			// 縦棒
+			&::after {
+				top: 50%;
+				rotate: 90deg;
+			}
+		}
+
+		// JSの開閉アニメーションと連動して位置を調整するアニメーション
+		// → 基本的にはJSの挙動と設定を合わせる
+		transition: margin-bottom 0.2s ease-out;
+
+		// ホバー処理
+		@media (any-hover: hover) and (pointer: fine) {
+			&:hover {
+				// 内部の表題用アイコン
+				.icon_title {
+					color: #c7a235;
+				}
+				// 内部のタイトル
+				.title {
+					color: #c7a235;
+				}
+				// 内部の開閉示唆用アイコン
+				.icon_toggle {
+					&::before , &::after {
+						background-color: #c7a235;
+					}
+				}
+			}
+		}
+	}
+
+		// アコーディオン見出し部分
+		.accordion__heading {
+
+			// 先頭に配置するアイコン
+			.icon_title {
+				display: inline-block;
+				font-weight: 900;
+				translate: 0 -2px;
+				margin-right: 0.5rem;
+				// ホバーアニメーション用
+				transition: color 0.3s;
+			}
+
+			// タイトルテキスト
+			.title {
+				font-size: 18px;
+				font-weight: 900;
+				// ホバーアニメーション用
+				transition: color 0.3s;
+			}
+
+		}
+
+
+	// MARK: ボディ部分
+	// --------------------------------------------------
+	.accordion__body {
+		// ※ JavaScriptの要件として、この要素にはスタイルを付与してはならない
+	}
+		// 内部のコンテンツ用ボックス
+		.accordion__content {
+			padding-block: 50px;
+			padding-inline: 50px 60px;
+			padding-top: 0;
+		}
+
+			// コンテンツ用のアイコン
+			.icon_content {
+			}
+
+			// テキストボックス
+			.accordion__textbox {
+				.p {
+					+.p {}
+				}
+			}
+

@@ -1,0 +1,53 @@
+extends ./_inc/_layout.pug
+
+append vars
+	include ./_inc/_config.pug
+	- var key = 'home'; // configのキーを指定
+	- var meta = pages[key];
+	-
+		var page = { // ページの基本設定
+			// Slug
+			slug : 'home', // ページ識別用： bodyClassなどに利用
+			css_slug : 'home', // {page以下のdir名/CSSファイル名}
+			// ファイルパス
+			root : './', // ファビコンなどのルート設置のファイルパス
+			img : './assets/img/',
+			pdf : './assets/pdf/',
+			video : './assets/video/',
+			js : './assets/js/',
+			css : './assets/css/',
+		}
+
+//- ◆ ページ限定でプリロードするファイル
+append preload
+	//- link(rel="preload", href=page.img+"home/mv_lg.webp", as="image", media="(min-width: 960px)")
+	//- link(rel="preload", href=page.img+"home/mv_md.webp", as="image", media="(min-width: 600px) and (max-width: 959px)")
+	//- link(rel="preload", href=page.img+"home/mv_sm.webp", as="image", media="(min-width: 599px)")
+
+//- ◆ ページ限定で追加読み込みするCSS（`head`内のlink末尾に読み込み）
+append css
+
+//- ◆ ページ限定のJS（`body`末尾に読み込み）
+append ft_js
+	//- script(src=page.js+"page/home.js" defer)
+
+//- ◆ コンテンツエリア
+block contents
+	main.site_frame__main
+		.site_main: .site_main__inner
+
+			//- MARK: メインビジュアル
+			//- ==================================================
+			.mv
+				.mv__inner
+					.mv__image
+						picture.picture
+							source(srcset=page.img+"home/mv_lg.webp" media="(min-width: 960px)" width="1440" height="680")
+							source(srcset=page.img+"home/mv_md.webp" media="(min-width: 600px)" width="900" height="900")
+							source(srcset=page.img+"home/mv_sm.webp" media="(min-width: 360px)" width="480" height="920")
+							img.img(src=page.img+"home/mv_sm.webp" decoding="async" alt="Example" width="480" height="920")
+
+			//- サンプル
+			//- ==================================================
+			include ./_inc/_sample/_sample_home.pug
+

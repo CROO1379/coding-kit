@@ -1,0 +1,27 @@
+//
+// MARK: ページ表題
+// ==================================================
+// 
+
+
+// MARK: ページヘッダー
+// ==================================================
+.page_header {}
+
+	.page_header__inenr {}
+
+
+// MARK: ページ見出し領域
+// ==================================================
+.page_heading {
+	background-color: #eee;
+	padding-block: 4em;
+}
+
+	.page_heading__inner {}
+
+		.page_heading__title {
+			.text {}
+		}
+
+
