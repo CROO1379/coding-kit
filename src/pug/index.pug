@@ -9,13 +9,13 @@ append vars
 			// Slug
 			slug : 'home', // ページ識別用： bodyClassなどに利用
 			css_slug : 'home', // {page以下のdir名/CSSファイル名}
-			// ファイルパス
+			// ファイルパス（Vite環境では相対パス使用）
 			root : './', // ファビコンなどのルート設置のファイルパス
-			img : './assets/img/',
+			img : './img/',
 			pdf : './assets/pdf/',
 			video : './assets/video/',
-			js : './assets/js/',
-			css : './assets/css/',
+			js : './js/',
+			css : './scss/',
 		}
 
 //- ◆ ページ限定でプリロードするファイル
@@ -42,10 +42,10 @@ block contents
 				.mv__inner
 					.mv__image
 						picture.picture
-							source(srcset=page.img+"home/mv_lg.webp" media="(min-width: 960px)" width="1440" height="680")
-							source(srcset=page.img+"home/mv_md.webp" media="(min-width: 600px)" width="900" height="900")
-							source(srcset=page.img+"home/mv_sm.webp" media="(min-width: 360px)" width="480" height="920")
-							img.img(src=page.img+"home/mv_sm.webp" decoding="async" alt="Example" width="480" height="920")
+							source(srcset="/assets/img/home/mv_lg.webp" media="(min-width: 960px)" width="1440" height="680")
+							source(srcset="/assets/img/home/mv_md.webp" media="(min-width: 600px)" width="900" height="900")
+							source(srcset="/assets/img/home/mv_sm.webp" media="(min-width: 360px)" width="480" height="920")
+							img.img(src="/assets/img/home/mv_sm.webp" decoding="async" alt="Example" width="480" height="920")
 
 			//- サンプル
 			//- ==================================================

@@ -1,0 +1,31 @@
+{
+  "name": "coding-kit",
+  "version": "1.0.0",
+  "description": "A modern static site starter kit with Vite, Pug, and Sass",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run build:dev && npm run dev:serve",
+    "dev:serve": "vite preview --outDir public --port 3000 --host",
+    "build": "npm run build:dev && vite build --outDir dist",
+    "build:dev": "node scripts/build-dev.js",
+    "preview": "vite preview --outDir dist",
+    "clean": "rm -rf public/index.html public/subpage public/assets",
+    "clean:all": "rm -rf dist public",
+    "lint:assets": "node scripts/build-dev.js --help"
+  },
+  "keywords": [
+    "vite",
+    "pug",
+    "sass",
+    "static-site",
+    "starter-kit"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "glob": "^11.0.0",
+    "pug": "^3.0.3",
+    "sass": "^1.77.0",
+    "vite": "^5.4.0"
+  }
+}
