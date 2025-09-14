@@ -186,8 +186,8 @@ const handleAfterPrint = (details, detailsName) => {
 // `document.addEventListener` を解除する。
 // もしくは、 `setTimeout(() => {}, 500);` を使って保険として遅延させる
 
-document.addEventListener('DOMContentLoaded', function() {
-	
+document.addEventListener('DOMContentLoaded', function () {
+
 	const accordions = document.querySelectorAll("details");
 
 	if (accordions.length === 0) return;

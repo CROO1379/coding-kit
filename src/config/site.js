@@ -2,7 +2,17 @@
 export const site = {
   name: 'サイト名',
   url: 'https://xxxx.xxx/',
-  ogtype: 'website'  // OGP用
+  ogtype: 'website',  // OGP用
+
+  // パス設定
+  paths: {
+    root: '/',
+    css: '/assets/css/',
+    js: '/assets/js/',
+    img: '/assets/img/',
+    pdf: '/assets/pdf/',
+    video: '/assets/video/'
+  }
 };
 
 // ページごとのメタ情報

@@ -165,12 +165,12 @@ function buildPugFiles(specificFile = null) {
         page: {
           slug: pageKey,
           css_slug: pageKey === 'home' ? 'home' : pageKey,
-          root: '/',
-          css: '/assets/css/',
-          js: '/assets/js/',
-          img: '/assets/img/',
-          pdf: '/assets/pdf/',
-          video: '/assets/video/'
+          root: site.paths.root,
+          css: site.paths.css,
+          js: site.paths.js,
+          img: site.paths.img,
+          pdf: site.paths.pdf,
+          video: site.paths.video
         },
         meta: {
           title: pageConfig.title,
