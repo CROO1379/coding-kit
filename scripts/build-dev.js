@@ -240,44 +240,41 @@ function buildSCSSFiles() {
 
   ensureDir('dist/assets/css');
 
-  try {
-    // global.scss
-    const globalResult = sass.compile('src/scss/global.scss');
-    fs.writeFileSync('dist/assets/css/global.css', globalResult.css);
-    console.log('   ✓ dist/assets/css/global.css');
-
-    // ページ固有のSCSS - 動的に検出
-    const pageFiles = glob.sync('src/scss/**/*.scss', {
-      ignore: [
-        'src/scss/_*/**/*.scss',  // _で始まるディレクトリは除外（パーシャル用）
-        'src/scss/**/_*.scss',    // _で始まるファイルは除外（パーシャル用）
-        'src/scss/global.scss'    // グローバルファイルは別途処理
-      ]
+  // 全てのSCSSファイルを動的に検出（パーシャルファイル以外）
+  const scssFiles = glob.sync('src/scss/**/*.scss')
+    .filter(file => {
+      const filename = path.basename(file);
+      // _で始まるファイル（パーシャル）は除外
+      return !filename.startsWith('_');
     });
 
-    pageFiles.forEach(file => {
-      try {
-        // src/scss/ からの相対パスを取得
-        const relativePath = path.relative('src/scss', file);
-        const dirName = path.dirname(relativePath);
-        const fileName = path.basename(file, '.scss');
+  scssFiles.forEach(file => {
+    // src/scss/ からの相対パスを取得
+    const relativePath = path.relative('src/scss', file);
+    const dirName = path.dirname(relativePath);
+    const baseName = path.basename(file, '.scss');
 
-        // 出力パスを動的に生成
-        const outputPath = dirName === '.'
-          ? `dist/assets/css/${fileName}.css`
-          : `dist/assets/css/${dirName}/${fileName}.css`;
+    // 出力パスを動的に生成
+    const outputPath = dirName === '.'
+      ? `dist/assets/css/${baseName}.css`
+      : `dist/assets/css/${dirName}/${baseName}.css`;
 
-        ensureDir(path.dirname(outputPath));
-        const result = sass.compile(file);
-        fs.writeFileSync(outputPath, result.css);
-        console.log(`   ✓ ${outputPath}`);
-      } catch (error) {
-        console.error(`   ✗ Error compiling ${file}:`, error.message);
-      }
-    });
-  } catch (error) {
-    console.error('Error compiling SCSS:', error.message);
-  }
+    ensureDir(path.dirname(outputPath));
+
+    try {
+      const result = sass.renderSync({
+        file: file,
+        outputStyle: 'compressed',
+        sourceMap: true,
+        outFile: outputPath
+      });
+
+      fs.writeFileSync(outputPath, result.css);
+      console.log(`   ✓ ${outputPath}`);
+    } catch (error) {
+      console.error(`❌ Error compiling ${file}:`, error.message);
+    }
+  });
 }
 
 // 3. JSファイルをコピー
@@ -286,20 +283,8 @@ function buildJSFiles() {
 
   ensureDir('dist/assets/js');
 
-  // main.js
-  if (fs.existsSync('src/js/main.js')) {
-    const mainJS = fs.readFileSync('src/js/main.js', 'utf-8');
-    fs.writeFileSync('dist/assets/js/main.js', mainJS);
-    console.log('   ✓ dist/assets/js/main.js');
-  }
-
-  // JSファイルを動的に検出
-  const jsFiles = glob.sync('src/js/**/*.js', {
-    ignore: [
-      'src/js/vendor/**/*.js',  // vendorディレクトリは除外（外部ライブラリ用）
-      'src/js/main.js'          // mainファイルは別途処理
-    ]
-  });
+  // 全てのJSファイルを動的に検出
+  const jsFiles = glob.sync('src/js/**/*.js');
 
   jsFiles.forEach(file => {
     // src/js/ からの相対パスを取得
@@ -307,28 +292,25 @@ function buildJSFiles() {
     const dirName = path.dirname(relativePath);
     const fileName = path.basename(file);
 
-    // 出力パスを動的に生成
-    const outputPath = dirName === '.'
-      ? `dist/assets/js/${fileName}`
-      : `dist/assets/js/${dirName}/${fileName}`;
-
-    ensureDir(path.dirname(outputPath));
-    const content = fs.readFileSync(file, 'utf-8');
-    fs.writeFileSync(outputPath, content);
-    console.log(`   ✓ ${outputPath}`);
-  });
-
-  // vendor JS（もしあれば）
-  const vendorFiles = glob.sync('src/js/vendor/*.js');
-  if (vendorFiles.length > 0) {
-    ensureDir('dist/assets/js/vendor');
-    vendorFiles.forEach(file => {
-      const name = path.basename(file);
+    // vendor ディレクトリの場合は特別扱い
+    if (dirName.startsWith('vendor')) {
+      const outputPath = `dist/assets/js/${relativePath}`;
+      ensureDir(path.dirname(outputPath));
       const content = fs.readFileSync(file, 'utf-8');
-      fs.writeFileSync(`dist/assets/js/vendor/${name}`, content);
-      console.log(`   ✓ dist/assets/js/vendor/${name}`);
-    });
-  }
+      fs.writeFileSync(outputPath, content);
+      console.log(`   ✓ ${outputPath}`);
+    } else {
+      // 通常のJSファイル
+      const outputPath = dirName === '.'
+        ? `dist/assets/js/${fileName}`
+        : `dist/assets/js/${dirName}/${fileName}`;
+
+      ensureDir(path.dirname(outputPath));
+      const content = fs.readFileSync(file, 'utf-8');
+      fs.writeFileSync(outputPath, content);
+      console.log(`   ✓ ${outputPath}`);
+    }
+  });
 }
 
 // メイン実行関数

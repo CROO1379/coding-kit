@@ -227,13 +227,6 @@ function buildSCSSFiles(specificFile = null) {
   ensureDir('dist/assets/css');
 
   try {
-    if (!specificFile || specificFile.includes('global.scss')) {
-      // global.scss
-      const globalResult = sass.compile('src/scss/global.scss');
-      fs.writeFileSync('dist/assets/css/global.css', globalResult.css);
-      console.log('   ✓ dist/assets/css/global.css');
-    }
-
     // SCSS ファイルを動的に検出
     let scssFiles;
     if (specificFile) {
@@ -243,29 +236,25 @@ function buildSCSSFiles(specificFile = null) {
       if (isPartialFile) {
         // 部分ファイルが変更された場合、全SCSSファイルを再ビルド
         console.log(`   📝 Partial SCSS file changed: ${specificFile}, rebuilding all SCSS files`);
-        scssFiles = glob.sync('src/scss/**/*.scss', {
-          ignore: [
-            'src/scss/_*/**/*.scss',
-            'src/scss/**/_*.scss',
-            'src/scss/global.scss'
-          ]
-        });
+        scssFiles = glob.sync('src/scss/**/*.scss')
+          .filter(file => {
+            const filename = path.basename(file);
+            return !filename.startsWith('_');
+          });
       } else {
         // 通常のSCSSファイルが変更された場合
-        scssFiles = [specificFile].filter(file =>
-          !file.includes('global.scss') &&
-          !path.basename(file).startsWith('_')
-        );
+        scssFiles = [specificFile].filter(file => {
+          const filename = path.basename(file);
+          return !filename.startsWith('_');
+        });
       }
     } else {
       // 全体ビルド時
-      scssFiles = glob.sync('src/scss/**/*.scss', {
-        ignore: [
-          'src/scss/_*/**/*.scss',
-          'src/scss/**/_*.scss',
-          'src/scss/global.scss'
-        ]
-      });
+      scssFiles = glob.sync('src/scss/**/*.scss')
+        .filter(file => {
+          const filename = path.basename(file);
+          return !filename.startsWith('_');
+        });
     }
 
     scssFiles.forEach(file => {
@@ -285,18 +274,12 @@ function buildSCSSFiles(specificFile = null) {
         fs.writeFileSync(outputPath, result.css);
         console.log(`   ✓ ${outputPath}`);
       } catch (error) {
-        console.error(`   ✗ Error compiling ${file}:`, error.message);
+        console.error(`❌ Error compiling ${file}:`, error.message);
       }
     });
 
-    // global.scssの依存ファイルが変更された場合は全体を再コンパイル
-    if (specificFile && !specificFile.includes('global.scss') && path.basename(specificFile).startsWith('_')) {
-      const globalResult = sass.compile('src/scss/global.scss');
-      fs.writeFileSync('dist/assets/css/global.css', globalResult.css);
-      console.log('   ✓ dist/assets/css/global.css (dependency updated)');
-    }
   } catch (error) {
-    console.error('Error compiling SCSS:', error.message);
+    console.error('❌ Error compiling SCSS:', error.message);
   }
 }
 
@@ -306,31 +289,14 @@ function buildJSFiles(specificFile = null) {
 
   ensureDir('dist/assets/js');
 
-  if (!specificFile || specificFile.includes('main.js')) {
-    // main.js
-    if (fs.existsSync('src/js/main.js')) {
-      const mainJS = fs.readFileSync('src/js/main.js', 'utf-8');
-      fs.writeFileSync('dist/assets/js/main.js', mainJS);
-      console.log('   ✓ dist/assets/js/main.js');
-    }
-  }
-
-  // JSファイルを動的に検出
+  // 全てのJSファイルを動的に検出
   let jsFiles;
   if (specificFile) {
     // 特定ファイルが指定された場合
-    jsFiles = [specificFile].filter(file =>
-      !file.includes('main.js') &&
-      !file.includes('src/js/vendor/')
-    );
+    jsFiles = [specificFile];
   } else {
     // 全体ビルド時
-    jsFiles = glob.sync('src/js/**/*.js', {
-      ignore: [
-        'src/js/vendor/**/*.js',
-        'src/js/main.js'
-      ]
-    });
+    jsFiles = glob.sync('src/js/**/*.js');
   }
 
   jsFiles.forEach(file => {
@@ -339,31 +305,25 @@ function buildJSFiles(specificFile = null) {
     const dirName = path.dirname(relativePath);
     const fileName = path.basename(file);
 
-    // 出力パスを動的に生成
-    const outputPath = dirName === '.'
-      ? `dist/assets/js/${fileName}`
-      : `dist/assets/js/${dirName}/${fileName}`;
-
-    ensureDir(path.dirname(outputPath));
-    const content = fs.readFileSync(file, 'utf-8');
-    fs.writeFileSync(outputPath, content);
-    console.log(`   ✓ ${outputPath}`);
-  });
-
-  // vendor JS
-  const vendorFiles = specificFile
-    ? [specificFile].filter(file => file.includes('src/js/vendor/'))
-    : glob.sync('src/js/vendor/*.js');
-
-  if (vendorFiles.length > 0) {
-    ensureDir('dist/assets/js/vendor');
-    vendorFiles.forEach(file => {
-      const name = path.basename(file);
+    // vendor ディレクトリの場合は特別扱い
+    if (dirName.startsWith('vendor')) {
+      const outputPath = `dist/assets/js/${relativePath}`;
+      ensureDir(path.dirname(outputPath));
       const content = fs.readFileSync(file, 'utf-8');
-      fs.writeFileSync(`dist/assets/js/vendor/${name}`, content);
-      console.log(`   ✓ dist/assets/js/vendor/${name}`);
-    });
-  }
+      fs.writeFileSync(outputPath, content);
+      console.log(`   ✓ ${outputPath}`);
+    } else {
+      // 通常のJSファイル
+      const outputPath = dirName === '.'
+        ? `dist/assets/js/${fileName}`
+        : `dist/assets/js/${dirName}/${fileName}`;
+
+      ensureDir(path.dirname(outputPath));
+      const content = fs.readFileSync(file, 'utf-8');
+      fs.writeFileSync(outputPath, content);
+      console.log(`   ✓ ${outputPath}`);
+    }
+  });
 }
 
 // 静的ファイルをコピー
