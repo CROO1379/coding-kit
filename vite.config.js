@@ -7,13 +7,6 @@ export default defineConfig({
   // public ディレクトリをカスタム使用するため無効化
   publicDir: false,
 
-  // プレビューサーバー設定
-  preview: {
-    host: true,
-    port: 3000,
-    open: true
-  },
-
   // 本番ビルド用設定
   build: {
     outDir: 'dist',

@@ -13,7 +13,6 @@
     "build": "run-s build:dev build:prod",
     "build:dev": "node scripts/build-dev.js",
     "build:prod": "vite build --outDir dist",
-    "preview": "vite preview --outDir dist",
     "clean": "rm -rf public/index.html public/subpage public/assets",
     "clean:all": "rm -rf dist public",
     "lint:assets": "node scripts/build-dev.js --help"
