@@ -1,3 +1,113 @@
+//
+// MARK: サイト全域で利用するJavaScript
+// ==================================================
+//
+
+
+document.addEventListener('DOMContentLoaded', function() {
+
+	// ==================================================
+	// MARK: 小サイズスクリーン対応
+	// ==================================================
+	// スマートフォンの特定サイズ以下を画面縮小で対応する
+	// 
+	!(function () {
+		const viewport = document.querySelector('meta[name="viewport"]');
+		function switchViewport() {
+			const value =
+				window.outerWidth > 360
+					? 'width=device-width,initial-scale=1'
+					: 'width=360';
+			if (viewport.getAttribute('content') !== value) {
+				viewport.setAttribute('content', value);
+			}
+		}
+		addEventListener('resize', switchViewport, false);
+		switchViewport();
+	})();
+
+}); // document.addEventListener
+
+
+
+
+// スムーズスクロールとドロワーの挙動（セットで利用）
+// ==================================================
+// `load` を使うとスマートフォンで遷移後のアンカースクロールが効かなくなるので注意
+
+document.addEventListener('DOMContentLoaded', function() {
+
+
+	// ==================================================
+	// MARK: スムーススクロール
+	// ==================================================
+
+		// ◆ 1・初期設定
+		// --------------------------------------------------
+		// ヘッダー要素のセレクタを変数で指定
+		// 例） `.header` `#header` `header`
+		const scrollHeaderElm = '.site_header';
+		// 移動オフセット
+		const SM_Offset = 0; // 画面幅：小
+		const MD_Offset = 0; // 画面幅：中
+		const LG_Offset = 0; // 画面幅：大
+		// ヘッダー要素の取得
+		let headerElement = scrollHeaderElm ? document.querySelector(scrollHeaderElm) : null; // 無い場合はnull
+		// オフセット値の初期化
+		let customOffset = LG_Offset; 
+
+		// ◆ 2・関数
+		// --------------------------------------------------
+
+		// ▼ レスポンシブの処理
+		// ------------------------------
+		function responsiveOffset() {
+			const width = window.innerWidth;
+			if (width < 400) {
+					customOffset = SM_Offset;
+			} else if (width < 900) {
+					customOffset = MD_Offset;
+			} else {
+					customOffset = LG_Offset;
+			}
+		}
+
+		// ▼ スクロール処理
+		// ------------------------------
+		function smoothScroll(selector) {
+			document.querySelectorAll(selector).forEach(function(anchor) {
+				anchor.addEventListener('click', function(e) {
+					e.preventDefault();
+					// ウィンドウサイズに応じたオフセットを再度計算
+					responsiveOffset();
+					// ヘッダー要素を再取得（念のために）
+					headerElement = scrollHeaderElm ? document.querySelector(scrollHeaderElm) : null;
+					// ヘッダーが存在しない場合、headerHeightは0に設定
+					let headerHeight = headerElement ? headerElement.offsetHeight : 0;
+					// クリックしたリンクのhref属性を取得し、ターゲット要素を取得
+					let href = this.getAttribute("href");
+					let target = document.querySelector(href === "#" || href === "" ? 'html' : href);
+
+					if (target) {
+						// ターゲットの位置をオフセットの分減算して計算
+						let position = target.offsetTop - headerHeight - customOffset;
+						window.scrollTo({
+							top: position,
+							behavior: 'smooth'
+						});
+					}
+				});
+			});
+		}
+
+		// ◆ 3・メイン処理
+		// --------------------------------------------------
+		// スムーズスクロールの実行
+		smoothScroll('a[href^="#"]');
+
+
+
+
 
 	// ==================================================
 	// MARK: ドロワーメニューの開閉
@@ -46,7 +156,7 @@
 
 		// ▼ ブラウザのスクロールバーの幅を取得（必須）
 		// ------------------------------
-		// レイアウトシフトするpx数を取得する
+		// レイアウトシフトするpx数を取得する。
 		const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
 
@@ -98,7 +208,7 @@
 			rootElm.style.height = '';
 			rootElm.style.paddingRight = ''; // レイアウトシフト防止
 			rootElm.style.overflow = '';
-
+			
 			// 以下、状況によって使い分け
 			rootElm.style.position = '';
 			window.scrollTo(0, scrollPos);
@@ -252,3 +362,9 @@
 		}, 50);
 		// リサイズで実行
 		window.addEventListener('resize', handleResize);
+
+
+
+
+}); // document.addEventListener
+
