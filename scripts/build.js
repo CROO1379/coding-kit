@@ -10,6 +10,13 @@ import { site, pages } from '../src/config/site.js';
 let buildTimer = null;
 const DEBOUNCE_DELAY = 50; // 50ms
 
+// エラー情報を保存するグローバル変数
+let currentErrors = {
+  sass: null,
+  js: null,
+  pug: null
+};
+
 // ディレクトリ作成
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) {
@@ -65,7 +72,94 @@ body {
 `.trim();
 }
 
-// 使用されているアセットを分析
+// JSエラー表示用CSS生成
+function generateJSErrorCSS(error, filePath) {
+  const errorFile = path.relative(process.cwd(), filePath);
+  const line = error.lineNumber || 'Unknown';
+  const column = error.columnNumber || 'Unknown';
+
+  // エラーメッセージをクリーンアップ
+  const cleanMessage = error.message
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\A ');
+
+  return `
+/* JAVASCRIPT SYNTAX ERROR */
+body::before {
+  content: "JAVASCRIPT SYNTAX ERROR\\A \\A File: ${errorFile}\\A Line: ${line}, Column: ${column}\\A \\A Error: ${cleanMessage}";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  background: white;
+  color: black;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  line-height: 1.2;
+  white-space: pre-wrap;
+  border-bottom: 3px solid #ff8800;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+body {
+  padding-top: 120px !important;
+}
+`.trim();
+}
+
+// Pugエラー表示用CSS生成
+function generatePugErrorCSS(error, filePath) {
+  const errorFile = path.relative(process.cwd(), filePath);
+  const line = error.line || 'Unknown';
+  const column = error.column || 'Unknown';
+
+  // エラーメッセージをクリーンアップ
+  const cleanMessage = error.message
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\A ');
+
+  return `
+/* PUG COMPILATION ERROR */
+body::before {
+  content: "PUG COMPILATION ERROR\\A \\A File: ${errorFile}\\A Line: ${line}, Column: ${column}\\A \\A Error: ${cleanMessage}";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  background: white;
+  color: black;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  line-height: 1.2;
+  white-space: pre-wrap;
+  border-bottom: 3px solid #9b59b6;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+body {
+  padding-top: 120px !important;
+}
+`.trim();
+}
+
+// HTMLにエラーCSSを埋め込むための関数
+function generateErrorStyleTag() {
+  let errorStyles = '';
+
+  if (currentErrors.sass) {
+    errorStyles += generateErrorCSS(currentErrors.sass.error, currentErrors.sass.filePath);
+  } else if (currentErrors.js) {
+    errorStyles += generateJSErrorCSS(currentErrors.js.error, currentErrors.js.filePath);
+  } else if (currentErrors.pug) {
+    errorStyles += generatePugErrorCSS(currentErrors.pug.error, currentErrors.pug.filePath);
+  }
+
+  return errorStyles ? `<style>${errorStyles}</style>` : '';
+}// 使用されているアセットを分析
 function analyzeAssetUsage() {
   const startTime = performance.now();
   const usedAssets = new Set();
@@ -303,11 +397,41 @@ function buildPugFiles(specificFile = null) {
         }
       });
 
+      // Pugコンパイル成功時はエラーをクリア
+      currentErrors.pug = null;
+
+      // エラースタイルを動的に埋め込み
+      let finalHtml = html;
+      const errorStyleTag = generateErrorStyleTag();
+      if (errorStyleTag) {
+        // </head>の直前にエラースタイルを挿入
+        finalHtml = html.replace('</head>', `${errorStyleTag}</head>`);
+      }
+
       ensureDir(path.dirname(outputPath));
-      fs.writeFileSync(outputPath, html);
+      fs.writeFileSync(outputPath, finalHtml);
       console.log(`   ✓ ${outputPath}`);
     } catch (error) {
       console.error(`   ✗ Error compiling ${file}:`, error.message);
+
+      // Pugエラーを保存
+      currentErrors.pug = { error, filePath: file };
+
+      // エラー表示用のHTMLを生成
+      const errorStyleTag = generateErrorStyleTag();
+      const errorHtml = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>Pug Compilation Error</title>
+  ${errorStyleTag}
+</head>
+<body>
+</body>
+</html>`;
+
+      ensureDir(path.dirname(outputPath));
+      fs.writeFileSync(outputPath, errorHtml);
     }
   });
 }
@@ -375,6 +499,9 @@ function buildSCSSFiles(specificFile = null) {
 
         console.error(`   ❌ ${errorFile}:${line}:${column} - ${error.message}`);
 
+        // エラー情報を保存
+        currentErrors.sass = { error, filePath: file };
+
         // ブラウザ用エラー表示CSSを生成
         ensureDir(path.dirname(outputPath));
         const errorCSS = generateErrorCSS(error, file);
@@ -393,6 +520,11 @@ function buildJSFiles(specificFile = null) {
   console.log('📦 Building JS files...');
 
   ensureDir('dist/assets/js');
+  ensureDir('dist/assets/css');
+
+  // デフォルトの空のJSエラーファイルを作成
+  const errorCSSPath = 'dist/assets/css/js-error.css';
+  fs.writeFileSync(errorCSSPath, '/* No JavaScript errors */');
 
   // 全てのJSファイルを動的に検出
   let jsFiles;
@@ -404,29 +536,52 @@ function buildJSFiles(specificFile = null) {
     jsFiles = glob.sync('src/js/**/*.js');
   }
 
+  let hasJSError = false;
+
   jsFiles.forEach(file => {
     // src/js/ からの相対パスを取得
     const relativePath = path.relative('src/js', file);
     const dirName = path.dirname(relativePath);
     const fileName = path.basename(file);
 
-    // vendor ディレクトリの場合は特別扱い
-    if (dirName.startsWith('vendor')) {
-      const outputPath = `dist/assets/js/${relativePath}`;
-      ensureDir(path.dirname(outputPath));
-      const content = fs.readFileSync(file, 'utf-8');
-      fs.writeFileSync(outputPath, content);
-      console.log(`   ✓ ${outputPath}`);
-    } else {
-      // 通常のJSファイル
-      const outputPath = dirName === '.'
+    // 出力パスを決定
+    const outputPath = dirName.startsWith('vendor') || dirName === 'vendor'
+      ? `dist/assets/js/${relativePath}`
+      : dirName === '.'
         ? `dist/assets/js/${fileName}`
         : `dist/assets/js/${dirName}/${fileName}`;
 
+    try {
       ensureDir(path.dirname(outputPath));
       const content = fs.readFileSync(file, 'utf-8');
+
+      // vendor ディレクトリ以外は構文チェック
+      if (!dirName.startsWith('vendor') && dirName !== 'vendor') {
+        // 基本的なJavaScript構文チェック（Functionコンストラクタを使用）
+        try {
+          new Function(content);
+        } catch (syntaxError) {
+          throw syntaxError;
+        }
+      }
+
       fs.writeFileSync(outputPath, content);
       console.log(`   ✓ ${outputPath}`);
+    } catch (error) {
+      // JSエラーの簡潔な表示
+      const line = error.lineNumber || '?';
+      const column = error.columnNumber || '?';
+
+      console.error(`   ❌ ${file}:${line}:${column} - ${error.message}`);
+
+      // エラー情報を保存
+      if (!hasJSError) {
+        currentErrors.js = { error, filePath: file };
+        const errorCSS = generateJSErrorCSS(error, file);
+        fs.writeFileSync(errorCSSPath, errorCSS);
+        console.log(`   ⚠️  ${errorCSSPath} (JS error display)`);
+        hasJSError = true;
+      }
     }
   });
 }
@@ -435,12 +590,17 @@ function buildJSFiles(specificFile = null) {
 function buildAll() {
   console.log('🚀 Building all files...\n');
 
+  // エラー情報をクリア
+  currentErrors.sass = null;
+  currentErrors.js = null;
+  currentErrors.pug = null;
+
   // 静的ファイルを最初にコピー
   copyStaticFiles();
 
-  buildPugFiles();
   buildSCSSFiles();
   buildJSFiles();
+  buildPugFiles(); // JSエラー情報を取得した後にPugをビルド
 
   // アセット使用分析とコピー
   const usedAssets = analyzeAssetUsage();
@@ -462,22 +622,32 @@ function buildSpecific(filePath, changeType = 'change') {
       console.log('📝 Config file changed - rebuilding all...');
       buildAll();
     } else if (ext === '.pug') {
+      // Pugエラーをクリア
+      currentErrors.pug = null;
       buildPugFiles(filePath);
       // Pugファイル変更時のみアセット再分析（画像参照が変わる可能性）
       const usedAssets = analyzeAssetUsage();
       copyUsedAssets(usedAssets);
     } else if (ext === '.scss') {
+      // SCSSエラーをクリア
+      currentErrors.sass = null;
       try {
         buildSCSSFiles(filePath);
         // SCSSファイル変更時のみアセット再分析（フォント参照が変わる可能性）
         const usedAssets = analyzeAssetUsage();
         copyUsedAssets(usedAssets);
+        // エラーがない場合はPugファイルを再コンパイル（エラー表示を消すため）
+        buildPugFiles();
       } catch (scssError) {
         // SCSSエラーは表示するが、ウォッチモードは継続
         console.error('SCSS compilation failed, but watching continues...');
       }
     } else if (ext === '.js') {
+      // JSエラーをクリア
+      currentErrors.js = null;
       buildJSFiles(filePath);
+      // エラーがない場合はPugファイルを再コンパイル（エラー表示を消すため）
+      buildPugFiles();
       // JSファイルはアセット分析不要
     } else if (isAssetFile) {
       // アセットファイルの変更時は使用分析を再実行
