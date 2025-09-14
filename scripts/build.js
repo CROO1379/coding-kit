@@ -706,7 +706,7 @@ const isWatchMode = args.includes('--watch') || args.includes('-w');
 if (isWatchMode) {
   // ウォッチモード
   console.log('🚀 Starting in watch mode...\n');
-  buildAll(); // 初回ビルド
+  console.log('👀 File watcher ready - waiting for changes...\n');
   startWatcher();
 } else {
   // ビルドモード
