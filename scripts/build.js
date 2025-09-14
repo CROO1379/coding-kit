@@ -24,6 +24,33 @@ function ensureDir(dir) {
   }
 }
 
+// 共通エラー表示用CSS生成
+function generateCommonErrorCSS(errorType, errorFile, line, column, cleanMessage, additionalContext = '') {
+  // エラータイプに応じた色設定
+  const borderColor = '#ce501fff'; // 全て同じ色（Sassと同じ）
+
+  return `
+/* ${errorType.toUpperCase()} ERROR */
+body::before {
+  content: "${errorType.toUpperCase()} ERROR\\A \\A File: ${errorFile}\\A Line: ${line}, Column: ${column}\\A \\A Error: ${cleanMessage}${additionalContext}";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  background: white;
+  color: black;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  line-height: 1.2;
+  white-space: pre-wrap;
+  border-bottom: 3px solid ${borderColor};
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+`.trim();
+}
+
 // Sassエラー表示用CSS生成
 function generateErrorCSS(error, filePath) {
   const errorFile = error.span && error.span.url
@@ -46,30 +73,9 @@ function generateErrorCSS(error, filePath) {
       .replace(/\n/g, '\\A ')
     : '';
 
-  return `
-/* SASS COMPILATION ERROR */
-body::before {
-  content: "SASS COMPILATION ERROR\\A \\A File: ${errorFile}\\A Line: ${line}, Column: ${column}\\A \\A Error: ${cleanMessage}${cleanContext ? '\\A \\A Context:\\A ' + cleanContext : ''}";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 99999;
-  background: white;
-  color: black;
-  padding: 20px;
-  font-family: 'Courier New', monospace;
-  font-size: 16px;
-  line-height: 1.2;
-  white-space: pre-wrap;
-  border-bottom: 3px solid #df8c8cff;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
+  const additionalContext = cleanContext ? '\\A \\A Context:\\A ' + cleanContext : '';
 
-body {
-  padding-top: 120px !important;
-}
-`.trim();
+  return generateCommonErrorCSS('SASS COMPILATION', errorFile, line, column, cleanMessage, additionalContext);
 }
 
 // JSエラー表示用CSS生成
@@ -83,30 +89,7 @@ function generateJSErrorCSS(error, filePath) {
     .replace(/"/g, '\\"')
     .replace(/\n/g, '\\A ');
 
-  return `
-/* JAVASCRIPT SYNTAX ERROR */
-body::before {
-  content: "JAVASCRIPT SYNTAX ERROR\\A \\A File: ${errorFile}\\A Line: ${line}, Column: ${column}\\A \\A Error: ${cleanMessage}";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 99999;
-  background: white;
-  color: black;
-  padding: 20px;
-  font-family: 'Courier New', monospace;
-  font-size: 16px;
-  line-height: 1.2;
-  white-space: pre-wrap;
-  border-bottom: 3px solid #ff8800;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-body {
-  padding-top: 120px !important;
-}
-`.trim();
+  return generateCommonErrorCSS('JAVASCRIPT SYNTAX', errorFile, line, column, cleanMessage);
 }
 
 // Pugエラー表示用CSS生成
@@ -120,30 +103,7 @@ function generatePugErrorCSS(error, filePath) {
     .replace(/"/g, '\\"')
     .replace(/\n/g, '\\A ');
 
-  return `
-/* PUG COMPILATION ERROR */
-body::before {
-  content: "PUG COMPILATION ERROR\\A \\A File: ${errorFile}\\A Line: ${line}, Column: ${column}\\A \\A Error: ${cleanMessage}";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 99999;
-  background: white;
-  color: black;
-  padding: 20px;
-  font-family: 'Courier New', monospace;
-  font-size: 16px;
-  line-height: 1.2;
-  white-space: pre-wrap;
-  border-bottom: 3px solid #9b59b6;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-body {
-  padding-top: 120px !important;
-}
-`.trim();
+  return generateCommonErrorCSS('PUG COMPILATION', errorFile, line, column, cleanMessage);
 }
 
 // HTMLにエラーCSSを埋め込むための関数
@@ -486,7 +446,12 @@ function buildSCSSFiles(specificFile = null) {
 
       try {
         ensureDir(path.dirname(outputPath));
-        const result = sass.compile(file);
+        const result = sass.compile(file, {
+          quietDeps: true,
+          verbose: false,
+          style: 'expanded',
+          silenceDeprecations: ['import']
+        });
         fs.writeFileSync(outputPath, result.css);
         console.log(`   ✓ ${outputPath}`);
       } catch (error) {
