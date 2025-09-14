@@ -46,16 +46,44 @@ function analyzeAssetUsage() {
     }
   });
 
-  // CSSファイルからフォントと画像パスを抽出
-  const scssFiles = glob.sync('src/scss/**/*.scss');
-  scssFiles.forEach(file => {
+  // コンパイル済みHTMLファイルからも画像パスを抽出
+  const htmlFiles = glob.sync('public/**/*.html');
+  htmlFiles.forEach(file => {
     const content = fs.readFileSync(file, 'utf-8');
 
-    // font-faceのurl()を抽出
-    const fontMatches = content.match(/url\(['"]?[^)]*fonts\/[^)'"]*/g);
+    // 相対パス形式の画像を抽出（./img/ または ../img/）
+    const relativeImgMatches = content.match(/src=["']\.\/?\.?\/img\/([^"']+)["']/g);
+    if (relativeImgMatches) {
+      relativeImgMatches.forEach(match => {
+        const pathMatch = match.match(/img\/([^"']+)/);
+        if (pathMatch) {
+          usedAssets.add(`img/${pathMatch[1]}`);
+        }
+      });
+    }
+
+    // 絶対パス形式の画像も抽出
+    const absoluteImgMatches = content.match(/src=["']\/assets\/img\/([^"']+)["']/g);
+    if (absoluteImgMatches) {
+      absoluteImgMatches.forEach(match => {
+        const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
+        if (pathMatch) {
+          usedAssets.add(`img/${pathMatch[1]}`);
+        }
+      });
+    }
+  });
+
+  // コンパイル済みCSSファイルからフォントと画像パスを抽出
+  const cssFiles = glob.sync('public/assets/css/**/*.css');
+  cssFiles.forEach(file => {
+    const content = fs.readFileSync(file, 'utf-8');
+
+    // font-faceのurl()を抽出（相対パス "../fonts/" 形式）
+    const fontMatches = content.match(/url\(["']?\.\.\/fonts\/[^)'"]+/g);
     if (fontMatches) {
       fontMatches.forEach(match => {
-        const fontPath = match.match(/fonts\/([^)'"]*)/)
+        const fontPath = match.match(/\.\.\/fonts\/([^)'"]+)/);
         if (fontPath) {
           usedAssets.add(`fonts/${fontPath[1]}`);
         }
@@ -63,10 +91,10 @@ function analyzeAssetUsage() {
     }
 
     // background-imageなどの画像を抽出
-    const bgMatches = content.match(/url\(['"]?[^)]*img\/[^)'"]*/g);
+    const bgMatches = content.match(/url\(["']?\.\.\/img\/[^)'"]+/g);
     if (bgMatches) {
       bgMatches.forEach(match => {
-        const imgPath = match.match(/img\/([^)'"]*)/)
+        const imgPath = match.match(/\.\.\/img\/([^)'"]+)/);
         if (imgPath) {
           usedAssets.add(`img/${imgPath[1]}`);
         }

@@ -2,21 +2,30 @@ extends ../_inc/_layout.pug
 
 append vars
 	include ../_inc/_config.pug
-	- var key = 'subpage'; // configのキーを指定
-	- var meta = pages[key];
-	-
-		var page = { // ページの基本設定
-			// Slug
-			slug : 'subpage', // ページ識別用： bodyClassなどに利用
-			css_slug : 'subpage', // {page以下のdir名/CSSファイル名}
-			// ファイルパス
-			root : '../', // ファビコンなどのルート設置のファイルパス
-			img : '../assets/img/',
-			pdf : '../assets/pdf/',
-			video : '../assets/video/',
-			js : '../assets/js/',
-			css : '../assets/css/',
-		}
+	//- 以下の設定は build-dev.js から自動注入されます：
+	//- - site (サイト情報)
+	//- - pages (ページ情報)
+	//- - page (現在のページ設定)
+	//- - meta (現在のページのメタ情報)
+	//- 
+	//- 旧システムの設定（コメントアウト）:
+	//- - var key = 'subpage'; // configのキーを指定
+	//- - var meta = pages[key];
+	//- ページ設定は build-dev.js から自動注入されるため、ここでの定義は不要
+	//- 以下はVite環境移行前の旧設定（コメントアウト）
+	//-
+		//- var page = { // ページの基本設定
+		//- 	// Slug
+		//- 	slug : 'subpage', // ページ識別用： bodyClassなどに利用
+		//- 	css_slug : 'subpage', // {page以下のdir名/CSSファイル名}
+		//- 	// ファイルパス
+		//- 	root : '../', // ファビコンなどのルート設置のファイルパス
+		//- 	img : '../assets/img/',
+		//- 	pdf : '../assets/pdf/',
+		//- 	video : '../assets/video/',
+		//- 	js : '../assets/js/',
+		//- 	css : '../assets/css/',
+		//- }
 
 //- ◆ ページ限定でプリロードするファイル
 append preload
