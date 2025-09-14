@@ -140,9 +140,16 @@ function copyUsedAssets(usedAssets) {
 function buildPugFiles(specificFile = null) {
   console.log('🔨 Building Pug files...');
 
-  const pugFiles = specificFile
-    ? [specificFile].filter(file => file.includes('index.pug') && !file.includes('_'))
+  // パーシャルファイル（_で始まる）が変更された場合は全体を再コンパイル
+  const isPartialFile = specificFile && (specificFile.includes('/_') || specificFile.includes('\\_'));
+
+  const pugFiles = (specificFile && !isPartialFile)
+    ? [specificFile].filter(file => file.includes('index.pug') && !file.includes('/_') && !file.includes('\\_'))
     : glob.sync('src/pug/**/index.pug', { ignore: ['src/pug/_*/**'] });
+
+  if (isPartialFile) {
+    console.log(`   📝 Partial file changed: ${specificFile} - recompiling all pages`);
+  }
 
   pugFiles.forEach(file => {
     const relativePath = file.replace('src/pug/', '').replace('/index.pug', '').replace('index.pug', '');
