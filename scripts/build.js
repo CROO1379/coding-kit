@@ -487,10 +487,6 @@ function buildJSFiles(specificFile = null) {
   ensureDir('dist/assets/js');
   ensureDir('dist/assets/css');
 
-  // デフォルトの空のJSエラーファイルを作成
-  const errorCSSPath = 'dist/assets/css/js-error.css';
-  fs.writeFileSync(errorCSSPath, '/* No JavaScript errors */');
-
   // 全てのJSファイルを動的に検出
   let jsFiles;
   if (specificFile) {
@@ -542,9 +538,6 @@ function buildJSFiles(specificFile = null) {
       // エラー情報を保存
       if (!hasJSError) {
         currentErrors.js = { error, filePath: file };
-        const errorCSS = generateJSErrorCSS(error, file);
-        fs.writeFileSync(errorCSSPath, errorCSS);
-        console.log(`   ⚠️  ${errorCSSPath} (JS error display)`);
         hasJSError = true;
       }
     }
@@ -630,6 +623,80 @@ function buildSpecific(filePath, changeType = 'change') {
   }
 }
 
+// ファイル削除処理
+function handleFileDelete(filePath) {
+  console.log(`\n🗑️  File deleted: ${filePath}`);
+
+  const ext = path.extname(filePath);
+
+  try {
+    if (ext === '.pug' && filePath.includes('index.pug')) {
+      // Pugファイル削除時：対応するHTMLファイルを削除
+      const relativePath = filePath.replace('src/pug/', '').replace('/index.pug', '').replace('index.pug', '');
+      const htmlPath = relativePath ? `dist/${relativePath}/index.html` : 'dist/index.html';
+
+      if (fs.existsSync(htmlPath)) {
+        fs.unlinkSync(htmlPath);
+        console.log(`   🗑️  Removed: ${htmlPath}`);
+      }
+    } else if (ext === '.scss' && !path.basename(filePath).startsWith('_')) {
+      // SCSSファイル削除時：対応するCSSファイルを削除
+      const relativePath = path.relative('src/scss', filePath);
+      const dirName = path.dirname(relativePath);
+      const fileName = path.basename(filePath, '.scss');
+
+      const cssPath = dirName === '.'
+        ? `dist/assets/css/${fileName}.css`
+        : `dist/assets/css/${dirName}/${fileName}.css`;
+
+      if (fs.existsSync(cssPath)) {
+        fs.unlinkSync(cssPath);
+        console.log(`   🗑️  Removed: ${cssPath}`);
+      }
+    } else if (ext === '.js') {
+      // JSファイル削除時：対応するJSファイルを削除
+      const relativePath = path.relative('src/js', filePath);
+      const dirName = path.dirname(relativePath);
+      const fileName = path.basename(filePath);
+
+      const jsPath = dirName.startsWith('vendor') || dirName === 'vendor'
+        ? `dist/assets/js/${relativePath}`
+        : dirName === '.'
+          ? `dist/assets/js/${fileName}`
+          : `dist/assets/js/${dirName}/${fileName}`;
+
+      if (fs.existsSync(jsPath)) {
+        fs.unlinkSync(jsPath);
+        console.log(`   🗑️  Removed: ${jsPath}`);
+      }
+    } else if (filePath.includes('src/img/') || filePath.includes('src/fonts/')) {
+      // アセットファイル削除時：対応するアセットファイルを削除
+      const assetPath = filePath.replace('src/', 'dist/assets/');
+
+      if (fs.existsSync(assetPath)) {
+        fs.unlinkSync(assetPath);
+        console.log(`   🗑️  Removed: ${assetPath}`);
+      }
+    } else if (path.basename(filePath).startsWith('_')) {
+      // パーシャルファイルが削除された場合は全体を再ビルド
+      console.log(`   📝 Partial file deleted - rebuilding all files`);
+      setTimeout(() => {
+        buildAll();
+      }, DEBOUNCE_DELAY);
+      return;
+    }
+
+    console.log('✅ File deletion handled successfully!');
+  } catch (error) {
+    console.error('❌ Error handling file deletion:', error.message);
+    // エラーが発生した場合は安全のため全体を再ビルド
+    console.log('🔄 Falling back to full rebuild...');
+    setTimeout(() => {
+      buildAll();
+    }, DEBOUNCE_DELAY);
+  }
+}
+
 // デバウンス付きビルド実行（ウォッチモード時のみ使用）
 function debouncedBuild(filePath, changeType) {
   if (buildTimer) {
@@ -667,11 +734,7 @@ function startWatcher() {
       debouncedBuild(filePath, 'added');
     })
     .on('unlink', (filePath) => {
-      console.log(`\n🗑️  File deleted: ${filePath}`);
-      // ファイル削除時は全体を再ビルド（安全のため）
-      setTimeout(() => {
-        buildAll();
-      }, DEBOUNCE_DELAY);
+      handleFileDelete(filePath);
     })
     .on('error', (error) => {
       console.error('❌ Watcher error:', error);
