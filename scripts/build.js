@@ -17,6 +17,54 @@ function ensureDir(dir) {
   }
 }
 
+// Sassエラー表示用CSS生成
+function generateErrorCSS(error, filePath) {
+  const errorFile = error.span && error.span.url
+    ? path.relative(process.cwd(), error.span.url.pathname)
+    : filePath;
+
+  const line = error.span && error.span.start ? error.span.start.line + 1 : 'Unknown';
+  const column = error.span && error.span.start ? error.span.start.column + 1 : 'Unknown';
+
+  // ANSIカラーコードを除去してエスケープ
+  const cleanMessage = error.message
+    .replace(/\u001b\[[0-9;]*m/g, '') // ANSIカラーコードを除去
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\A ');
+
+  const cleanContext = error.span && error.span.context
+    ? error.span.context
+      .replace(/\u001b\[[0-9;]*m/g, '') // ANSIカラーコードを除去
+      .replace(/"/g, '\\"')
+      .replace(/\n/g, '\\A ')
+    : '';
+
+  return `
+/* SASS COMPILATION ERROR */
+body::before {
+  content: "SASS COMPILATION ERROR\\A \\A File: ${errorFile}\\A Line: ${line}, Column: ${column}\\A \\A Error: ${cleanMessage}${cleanContext ? '\\A \\A Context:\\A ' + cleanContext : ''}";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  background: white;
+  color: black;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  line-height: 1.2;
+  white-space: pre-wrap;
+  border-bottom: 3px solid #df8c8cff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+body {
+  padding-top: 120px !important;
+}
+`.trim();
+}
+
 // 使用されているアセットを分析
 function analyzeAssetUsage() {
   const startTime = performance.now();
@@ -302,28 +350,41 @@ function buildSCSSFiles(specificFile = null) {
     }
 
     scssFiles.forEach(file => {
+      // src/scss/ からの相対パスを取得
+      const relativePath = path.relative('src/scss', file);
+      const dirName = path.dirname(relativePath);
+      const fileName = path.basename(file, '.scss');
+
+      // 出力パスを動的に生成
+      const outputPath = dirName === '.'
+        ? `dist/assets/css/${fileName}.css`
+        : `dist/assets/css/${dirName}/${fileName}.css`;
+
       try {
-        // src/scss/ からの相対パスを取得
-        const relativePath = path.relative('src/scss', file);
-        const dirName = path.dirname(relativePath);
-        const fileName = path.basename(file, '.scss');
-
-        // 出力パスを動的に生成
-        const outputPath = dirName === '.'
-          ? `dist/assets/css/${fileName}.css`
-          : `dist/assets/css/${dirName}/${fileName}.css`;
-
         ensureDir(path.dirname(outputPath));
         const result = sass.compile(file);
         fs.writeFileSync(outputPath, result.css);
         console.log(`   ✓ ${outputPath}`);
       } catch (error) {
-        console.error(`❌ Error compiling ${file}:`, error.message);
+        // Sassエラーの簡潔な表示
+        const errorFile = error.span && error.span.url
+          ? path.relative(process.cwd(), error.span.url.pathname)
+          : file;
+        const line = error.span && error.span.start ? error.span.start.line + 1 : '?';
+        const column = error.span && error.span.start ? error.span.start.column + 1 : '?';
+
+        console.error(`   ❌ ${errorFile}:${line}:${column} - ${error.message}`);
+
+        // ブラウザ用エラー表示CSSを生成
+        ensureDir(path.dirname(outputPath));
+        const errorCSS = generateErrorCSS(error, file);
+        fs.writeFileSync(outputPath, errorCSS);
+        console.log(`   ⚠️  ${outputPath} (error display)`);
       }
     });
 
   } catch (error) {
-    console.error('❌ Error compiling SCSS:', error.message);
+    console.error(`❌ SCSS Build Error: ${error.message}`);
   }
 }
 
@@ -406,10 +467,15 @@ function buildSpecific(filePath, changeType = 'change') {
       const usedAssets = analyzeAssetUsage();
       copyUsedAssets(usedAssets);
     } else if (ext === '.scss') {
-      buildSCSSFiles(filePath);
-      // SCSSファイル変更時のみアセット再分析（フォント参照が変わる可能性）
-      const usedAssets = analyzeAssetUsage();
-      copyUsedAssets(usedAssets);
+      try {
+        buildSCSSFiles(filePath);
+        // SCSSファイル変更時のみアセット再分析（フォント参照が変わる可能性）
+        const usedAssets = analyzeAssetUsage();
+        copyUsedAssets(usedAssets);
+      } catch (scssError) {
+        // SCSSエラーは表示するが、ウォッチモードは継続
+        console.error('SCSS compilation failed, but watching continues...');
+      }
     } else if (ext === '.js') {
       buildJSFiles(filePath);
       // JSファイルはアセット分析不要
@@ -424,6 +490,8 @@ function buildSpecific(filePath, changeType = 'change') {
     console.log('✅ Build completed successfully!');
   } catch (error) {
     console.error('❌ Build failed:', error.message);
+    // ウォッチモードでは、エラーが発生してもプロセスを継続
+    console.log('🔄 Continuing to watch for file changes...');
   }
 }
 
