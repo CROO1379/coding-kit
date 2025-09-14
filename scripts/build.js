@@ -6,9 +6,9 @@ import path from 'path';
 import { glob } from 'glob';
 import { site, pages } from '../src/config/site.js';
 
-// デバウンス用のタイマー
+// デバウンス用のタイマー（ウォッチモード時のみ使用）
 let buildTimer = null;
-const DEBOUNCE_DELAY = 50; // 50ms (さらに短縮)
+const DEBOUNCE_DELAY = 50; // 50ms
 
 // ディレクトリ作成
 function ensureDir(dir) {
@@ -133,6 +133,31 @@ function copyUsedAssets(usedAssets) {
   console.log(`✓ Copied ${copiedCount} used assets`);
   if (missingCount > 0) {
     console.log(`⚠️  ${missingCount} assets were referenced but not found`);
+  }
+}
+
+// 静的ファイルをコピー
+function copyStaticFiles() {
+  console.log('📋 Copying static files...');
+
+  if (fs.existsSync('public')) {
+    const staticFiles = glob.sync('public/**/*', { nodir: true });
+
+    if (staticFiles.length > 0) {
+      staticFiles.forEach(file => {
+        const relativePath = file.replace('public/', '');
+        const destPath = `dist/${relativePath}`;
+
+        ensureDir(path.dirname(destPath));
+        fs.copyFileSync(file, destPath);
+      });
+
+      console.log(`   ✓ Copied ${staticFiles.length} static files from public/`);
+    } else {
+      console.log('   - No static files found in public/');
+    }
+  } else {
+    console.log('   - public/ directory not found');
   }
 }
 
@@ -326,32 +351,25 @@ function buildJSFiles(specificFile = null) {
   });
 }
 
-// 静的ファイルをコピー
-function copyStaticFiles() {
-  console.log('📋 Copying static files...');
+// 全体ビルド
+function buildAll() {
+  console.log('🚀 Building all files...\n');
 
-  if (fs.existsSync('public')) {
-    const staticFiles = glob.sync('public/**/*', { nodir: true });
+  // 静的ファイルを最初にコピー
+  copyStaticFiles();
 
-    if (staticFiles.length > 0) {
-      staticFiles.forEach(file => {
-        const relativePath = file.replace('public/', '');
-        const destPath = `dist/${relativePath}`;
+  buildPugFiles();
+  buildSCSSFiles();
+  buildJSFiles();
 
-        ensureDir(path.dirname(destPath));
-        fs.copyFileSync(file, destPath);
-      });
+  // アセット使用分析とコピー
+  const usedAssets = analyzeAssetUsage();
+  copyUsedAssets(usedAssets);
 
-      console.log(`   ✓ Copied ${staticFiles.length} static files from public/`);
-    } else {
-      console.log('   - No static files found in public/');
-    }
-  } else {
-    console.log('   - public/ directory not found');
-  }
+  console.log('\n✅ Full build completed successfully!');
 }
 
-// 部分ビルド実行
+// 部分ビルド実行（ウォッチモード時のみ使用）
 function buildSpecific(filePath, changeType = 'change') {
   const buildStartTime = performance.now();
   console.log(`\n🔄 File ${changeType}: ${filePath}`);
@@ -390,25 +408,7 @@ function buildSpecific(filePath, changeType = 'change') {
   }
 }
 
-// 全体ビルド
-function buildAll() {
-  console.log('🚀 Building all files...\n');
-
-  // 静的ファイルを最初にコピー
-  copyStaticFiles();
-
-  buildPugFiles();
-  buildSCSSFiles();
-  buildJSFiles();
-
-  // アセット使用分析とコピー
-  const usedAssets = analyzeAssetUsage();
-  copyUsedAssets(usedAssets);
-
-  console.log('\n✅ Full build completed successfully!');
-}
-
-// デバウンス付きビルド実行
+// デバウンス付きビルド実行（ウォッチモード時のみ使用）
 function debouncedBuild(filePath, changeType) {
   if (buildTimer) {
     clearTimeout(buildTimer);
@@ -419,7 +419,7 @@ function debouncedBuild(filePath, changeType) {
   }, DEBOUNCE_DELAY);
 }
 
-// ウォッチャー開始
+// ウォッチャー開始（ウォッチモード時のみ使用）
 function startWatcher() {
   console.log('👀 Starting file watcher...');
   console.log('🎯 Watching: src/ directory');
@@ -463,5 +463,31 @@ function startWatcher() {
   });
 }
 
-// メイン実行
-startWatcher();
+// コマンドライン引数の処理
+const args = process.argv.slice(2);
+if (args.includes('--help') || args.includes('-h')) {
+  console.log(`
+Usage: node scripts/build.js [options]
+
+Options:
+  --watch, -w    Start file watcher for development
+  --help, -h     Show this help message
+
+Without --watch: Builds all files once and exits.
+With --watch: Starts file watcher and rebuilds on changes.
+`);
+  process.exit(0);
+}
+
+const isWatchMode = args.includes('--watch') || args.includes('-w');
+
+if (isWatchMode) {
+  // ウォッチモード
+  console.log('🚀 Starting in watch mode...\n');
+  buildAll(); // 初回ビルド
+  startWatcher();
+} else {
+  // ビルドモード
+  console.log('🚀 Starting build...\n');
+  buildAll();
+}
