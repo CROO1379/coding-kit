@@ -198,5 +198,4 @@ bower_components
 
 ### KIT ###
 node_modules/
-prepros.config
-
+dist/
