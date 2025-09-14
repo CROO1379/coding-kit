@@ -8,7 +8,7 @@ import { site, pages } from '../src/config/site.js';
 
 // デバウンス用のタイマー
 let buildTimer = null;
-const DEBOUNCE_DELAY = 300; // 300ms
+const DEBOUNCE_DELAY = 50; // 50ms (さらに短縮)
 
 // ディレクトリ作成
 function ensureDir(dir) {
@@ -19,6 +19,7 @@ function ensureDir(dir) {
 
 // 使用されているアセットを分析
 function analyzeAssetUsage() {
+  const startTime = performance.now();
   const usedAssets = new Set();
 
   console.log('🔍 Analyzing asset usage...');
@@ -106,6 +107,9 @@ function analyzeAssetUsage() {
       });
     }
   });
+
+  const endTime = performance.now();
+  console.log(`📊 Asset analysis completed in ${(endTime - startTime).toFixed(2)}ms`);
 
   return usedAssets;
 }
@@ -271,6 +275,7 @@ function buildJSFiles(specificFile = null) {
 
 // 部分ビルド実行
 function buildSpecific(filePath, changeType = 'change') {
+  const buildStartTime = performance.now();
   console.log(`\n🔄 File ${changeType}: ${filePath}`);
 
   const ext = path.extname(filePath);
@@ -282,26 +287,25 @@ function buildSpecific(filePath, changeType = 'change') {
       buildAll();
     } else if (ext === '.pug') {
       buildPugFiles(filePath);
-      // Pugファイル変更時はアセットも再分析
-      if (fs.existsSync('public/index.html') || fs.existsSync('public/subpage/index.html')) {
-        const usedAssets = analyzeAssetUsage();
-        copyUsedAssets(usedAssets);
-      }
+      // Pugファイル変更時のみアセット再分析（画像参照が変わる可能性）
+      const usedAssets = analyzeAssetUsage();
+      copyUsedAssets(usedAssets);
     } else if (ext === '.scss') {
       buildSCSSFiles(filePath);
-      // SCSSファイル変更時はアセットも再分析（フォント参照が変わる可能性）
-      if (fs.existsSync('public/assets/css/global.css')) {
-        const usedAssets = analyzeAssetUsage();
-        copyUsedAssets(usedAssets);
-      }
+      // SCSSファイル変更時のみアセット再分析（フォント参照が変わる可能性）
+      const usedAssets = analyzeAssetUsage();
+      copyUsedAssets(usedAssets);
     } else if (ext === '.js') {
       buildJSFiles(filePath);
+      // JSファイルはアセット分析不要
     } else if (isAssetFile) {
       // アセットファイルの変更時は使用分析を再実行
       const usedAssets = analyzeAssetUsage();
       copyUsedAssets(usedAssets);
     }
 
+    const buildEndTime = performance.now();
+    console.log(`⏱️  Total build time: ${(buildEndTime - buildStartTime).toFixed(2)}ms`);
     console.log('✅ Build completed successfully!');
   } catch (error) {
     console.error('❌ Build failed:', error.message);
@@ -338,7 +342,7 @@ function debouncedBuild(filePath, changeType) {
 function startWatcher() {
   console.log('👀 Starting file watcher...');
   console.log('🎯 Watching: src/ directory');
-  console.log('⏱️  Debounce delay: 300ms');
+  console.log('⏱️  Debounce delay: 50ms');
   console.log('🛑 Press Ctrl+C to stop\n');
 
   // 初回の全体ビルド
