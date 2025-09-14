@@ -345,9 +345,6 @@ function startWatcher() {
   console.log('⏱️  Debounce delay: 50ms');
   console.log('🛑 Press Ctrl+C to stop\n');
 
-  // 初回の全体ビルド
-  buildAll();
-
   // ファイルウォッチャーの設定
   const watcher = chokidar.watch('src/', {
     ignored: [

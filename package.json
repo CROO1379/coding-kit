@@ -4,10 +4,11 @@
   "description": "A modern static site starter kit with Vite, Pug, and Sass",
   "type": "module",
   "scripts": {
-    "dev": "run-p dev:watch dev:serve",
+    "dev": "run-s dev:clean dev:build && run-p dev:watch dev:serve",
     "dev:serve": "browser-sync start --server public --port 3000 --files 'public/**/*.html,public/**/*.css,public/**/*.js' --reload-delay 0 --reload-debounce 50 --no-ghost-mode --no-notify",
     "dev:build": "node scripts/build-dev.js",
     "dev:watch": "node scripts/watch.js",
+    "dev:clean": "rm -rf public",
     "watch": "npm run dev:watch",
     "serve": "npm run dev:serve",
     "build": "run-s build:dev build:prod",
