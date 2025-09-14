@@ -190,6 +190,27 @@ function generatePageConfig() {
   return dynamicPages;
 }
 
+// オブジェクトを動的にマージするヘルパー関数（pathsをフラット化）
+function mergeObjects(target, source, excludeKeys = []) {
+  const result = { ...target };
+
+  Object.keys(source).forEach(key => {
+    if (!excludeKeys.includes(key)) {
+      // pathsオブジェクトの場合はフラット化して個別のプロパティとして追加
+      if (key === 'paths' && typeof source[key] === 'object' && source[key] !== null) {
+        Object.keys(source[key]).forEach(pathKey => {
+          result[pathKey] = source[key][pathKey];
+        });
+        // pathsオブジェクト自体は追加しない
+      } else {
+        result[key] = source[key];
+      }
+    }
+  });
+
+  return result;
+}
+
 // Pugファイルをコンパイル
 function buildPugFiles(specificFile = null) {
   console.log('🔨 Building Pug files...');
@@ -216,22 +237,20 @@ function buildPugFiles(specificFile = null) {
     const pageConfig = dynamicPages[pageKey];
 
     try {
+      // pageオブジェクトを動的に構築（siteオブジェクト全体をマージ）
+      const pageData = mergeObjects({}, site, []); // targetを空オブジェクト、sourceをsiteに
+      pageData.slug = pageKey;
+      pageData.css_slug = pageKey === 'home' ? 'home' : pageKey;
+
+      // metaオブジェクトも動的に構築
+      const metaData = mergeObjects(pageConfig, {}, ['url']); // urlは別途処理
+
       const html = pug.renderFile(file, {
         site,
         pages: dynamicPages,
-        page: {
-          slug: pageKey,
-          css_slug: pageKey === 'home' ? 'home' : pageKey,
-          root: site.paths.root,
-          css: site.paths.css,
-          js: site.paths.js,
-          img: site.paths.img,
-          pdf: site.paths.pdf,
-          video: site.paths.video
-        },
+        page: pageData,
         meta: {
-          title: pageConfig.title,
-          description: pageConfig.description,
+          ...metaData,
           url: pageConfig.url
         }
       });
