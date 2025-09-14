@@ -19,8 +19,13 @@ let currentErrors = {
 
 // ディレクトリ作成
 function ensureDir(dir) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (error) {
+    console.error(`❌ Failed to create directory ${dir}: ${error.message}`);
+    throw error; // 上位レベルでハンドリングされるようにthrow
   }
 }
 
@@ -29,10 +34,16 @@ function generateCommonErrorCSS(errorType, errorFile, line, column, cleanMessage
   // エラータイプに応じた色設定
   const borderColor = '#ce501fff'; // 全て同じ色（Sassと同じ）
 
+  // CSS文字列用に値をエスケープ
+  const safeErrorType = String(errorType).replace(/"/g, '\\"');
+  const safeErrorFile = String(errorFile).replace(/"/g, '\\"');
+  const safeLine = String(line).replace(/"/g, '\\"');
+  const safeColumn = String(column).replace(/"/g, '\\"');
+
   return `
-/* ${errorType.toUpperCase()} ERROR */
+/* ${safeErrorType.toUpperCase()} ERROR */
 body::before {
-  content: "${errorType.toUpperCase()} ERROR\\A \\A File: ${errorFile}\\A Line: ${line}, Column: ${column}\\A \\A Error: ${cleanMessage}${additionalContext}";
+  content: "${safeErrorType.toUpperCase()} ERROR\\A \\A File: ${safeErrorFile}\\A Line: ${safeLine}, Column: ${safeColumn}\\A \\A Error: ${cleanMessage}${additionalContext}";
   position: fixed;
   top: 0;
   left: 0;
@@ -129,78 +140,86 @@ function analyzeAssetUsage() {
   // コンパイル済みHTMLファイルから画像パスを抽出
   const htmlFiles = glob.sync('dist/**/*.html');
   htmlFiles.forEach(file => {
-    const content = fs.readFileSync(file, 'utf-8');
+    try {
+      const content = fs.readFileSync(file, 'utf-8');
 
-    // 相対パス形式の画像を抽出（./img/ または ../img/）
-    const relativeImgMatches = content.match(/src=["']\.\/?\.?\/img\/([^"']+)["']/g);
-    if (relativeImgMatches) {
-      relativeImgMatches.forEach(match => {
-        const pathMatch = match.match(/img\/([^"']+)/);
-        if (pathMatch) {
-          usedAssets.add(`img/${pathMatch[1]}`);
-        }
-      });
-    }
+      // 相対パス形式の画像を抽出（./img/ または ../img/）
+      const relativeImgMatches = content.match(/src=["']\.\/?\.?\/img\/([^"']+)["']/g);
+      if (relativeImgMatches) {
+        relativeImgMatches.forEach(match => {
+          const pathMatch = match.match(/img\/([^"']+)/);
+          if (pathMatch) {
+            usedAssets.add(`img/${pathMatch[1]}`);
+          }
+        });
+      }
 
-    // 絶対パス形式の画像も抽出
-    const absoluteImgMatches = content.match(/src=["']\/assets\/img\/([^"']+)["']/g);
-    if (absoluteImgMatches) {
-      absoluteImgMatches.forEach(match => {
-        const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
-        if (pathMatch) {
-          usedAssets.add(`img/${pathMatch[1]}`);
-        }
-      });
-    }
+      // 絶対パス形式の画像も抽出
+      const absoluteImgMatches = content.match(/src=["']\/assets\/img\/([^"']+)["']/g);
+      if (absoluteImgMatches) {
+        absoluteImgMatches.forEach(match => {
+          const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
+          if (pathMatch) {
+            usedAssets.add(`img/${pathMatch[1]}`);
+          }
+        });
+      }
 
-    // srcset属性からも抽出
-    const srcsetMatches = content.match(/srcset=["'][^"']*\/assets\/img\/([^"']+)["']/g);
-    if (srcsetMatches) {
-      srcsetMatches.forEach(match => {
-        const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
-        if (pathMatch) {
-          usedAssets.add(`img/${pathMatch[1]}`);
-        }
-      });
-    }
+      // srcset属性からも抽出
+      const srcsetMatches = content.match(/srcset=["'][^"']*\/assets\/img\/([^"']+)["']/g);
+      if (srcsetMatches) {
+        srcsetMatches.forEach(match => {
+          const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
+          if (pathMatch) {
+            usedAssets.add(`img/${pathMatch[1]}`);
+          }
+        });
+      }
 
-    // source要素からも抽出
-    const sourceMatches = content.match(/<source[^>]+srcset=["'][^"']*\/assets\/img\/([^"']+)["'][^>]*>/g);
-    if (sourceMatches) {
-      sourceMatches.forEach(match => {
-        const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
-        if (pathMatch) {
-          usedAssets.add(`img/${pathMatch[1]}`);
-        }
-      });
+      // source要素からも抽出
+      const sourceMatches = content.match(/<source[^>]+srcset=["'][^"']*\/assets\/img\/([^"']+)["'][^>]*>/g);
+      if (sourceMatches) {
+        sourceMatches.forEach(match => {
+          const pathMatch = match.match(/\/assets\/img\/([^"']+)/);
+          if (pathMatch) {
+            usedAssets.add(`img/${pathMatch[1]}`);
+          }
+        });
+      }
+    } catch (error) {
+      console.warn(`⚠️  Could not read file ${file}: ${error.message}`);
     }
   });
 
   // コンパイル済みCSSファイルからフォントと画像パスを抽出
   const cssFiles = glob.sync('dist/assets/css/**/*.css');
   cssFiles.forEach(file => {
-    const content = fs.readFileSync(file, 'utf-8');
+    try {
+      const content = fs.readFileSync(file, 'utf-8');
 
-    // font-faceのurl()を抽出（相対パス "../fonts/" 形式）
-    const fontMatches = content.match(/url\(["']?\.\.\/fonts\/[^)'"]+/g);
-    if (fontMatches) {
-      fontMatches.forEach(match => {
-        const fontPath = match.match(/\.\.\/fonts\/([^)'"]+)/);
-        if (fontPath) {
-          usedAssets.add(`fonts/${fontPath[1]}`);
-        }
-      });
-    }
+      // font-faceのurl()を抽出（相対パス "../fonts/" 形式）
+      const fontMatches = content.match(/url\(["']?\.\.\/fonts\/[^)'"]+/g);
+      if (fontMatches) {
+        fontMatches.forEach(match => {
+          const fontPath = match.match(/\.\.\/fonts\/([^)'"]+)/);
+          if (fontPath) {
+            usedAssets.add(`fonts/${fontPath[1]}`);
+          }
+        });
+      }
 
-    // background-imageなどの画像を抽出
-    const bgMatches = content.match(/url\(["']?\.\.\/img\/[^)'"]+/g);
-    if (bgMatches) {
-      bgMatches.forEach(match => {
-        const imgPath = match.match(/\.\.\/img\/([^)'"]+)/);
-        if (imgPath) {
-          usedAssets.add(`img/${imgPath[1]}`);
-        }
-      });
+      // background-imageなどの画像を抽出
+      const bgMatches = content.match(/url\(["']?\.\.\/img\/[^)'"]+/g);
+      if (bgMatches) {
+        bgMatches.forEach(match => {
+          const imgPath = match.match(/\.\.\/img\/([^)'"]+)/);
+          if (imgPath) {
+            usedAssets.add(`img/${imgPath[1]}`);
+          }
+        });
+      }
+    } catch (error) {
+      console.warn(`⚠️  Could not read CSS file ${file}: ${error.message}`);
     }
   });
 
@@ -223,9 +242,14 @@ function copyUsedAssets(usedAssets) {
     const destPath = `dist/assets/${assetPath}`;
 
     if (fs.existsSync(srcPath)) {
-      ensureDir(path.dirname(destPath));
-      fs.copyFileSync(srcPath, destPath);
-      copiedCount++;
+      try {
+        ensureDir(path.dirname(destPath));
+        fs.copyFileSync(srcPath, destPath);
+        copiedCount++;
+      } catch (error) {
+        console.error(`❌ Failed to copy ${srcPath} to ${destPath}: ${error.message}`);
+        missingCount++;
+      }
     } else {
       console.warn(`⚠️  Asset not found: ${srcPath}`);
       missingCount++;
@@ -604,8 +628,10 @@ function buildSpecific(filePath, changeType = 'change') {
       // JSエラーをクリア
       currentErrors.js = null;
       buildJSFiles(filePath);
-      // エラーがない場合はPugファイルを再コンパイル（エラー表示を消すため）
-      buildPugFiles();
+      // JSビルド完了後にエラー状態を確認してからPugを再コンパイル
+      setTimeout(() => {
+        buildPugFiles();
+      }, 10);
       // JSファイルはアセット分析不要
     } else if (isAssetFile) {
       // アセットファイルの変更時は使用分析を再実行
