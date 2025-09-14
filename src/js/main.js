@@ -105,9 +105,6 @@ document.addEventListener('DOMContentLoaded', function () {
 	smoothScroll('a[href^="#"]');
 
 
-
-
-
 	// ==================================================
 	// MARK: ドロワーメニューの開閉
 	// ==================================================
