@@ -5,15 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "run-s clean:dev build:dev && run-p dev:watch dev:serve",
-    "dev:serve": "browser-sync start --server public --port 3000 --files 'public/**/*.html,public/**/*.css,public/**/*.js' --no-ghost-mode --no-notify",
+    "dev:serve": "browser-sync start --server dist --port 3000 --files 'dist/**/*.html,dist/**/*.css,dist/**/*.js' --no-ghost-mode --no-notify",
     "dev:watch": "node scripts/watch.js",
     "build": "run-s clean:dev build:dev",
     "build:dev": "node scripts/build-dev.js",
-    "build:prod": "run-s clean:prod build:prod:vite",
-    "build:prod:vite": "vite build --outDir dist",
-    "clean": "run-p clean:dev clean:prod",
-    "clean:dev": "rm -rf public",
-    "clean:prod": "rm -rf dist",
+    "clean": "rm -rf dist",
+    "clean:dev": "rm -rf dist",
     "watch": "npm run dev:watch",
     "serve": "npm run dev:serve"
   },

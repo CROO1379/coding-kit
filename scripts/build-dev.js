@@ -47,7 +47,7 @@ function analyzeAssetUsage() {
   });
 
   // コンパイル済みHTMLファイルからも画像パスを抽出
-  const htmlFiles = glob.sync('public/**/*.html');
+  const htmlFiles = glob.sync('dist/**/*.html');
   htmlFiles.forEach(file => {
     const content = fs.readFileSync(file, 'utf-8');
 
@@ -75,7 +75,7 @@ function analyzeAssetUsage() {
   });
 
   // コンパイル済みCSSファイルからフォントと画像パスを抽出
-  const cssFiles = glob.sync('public/assets/css/**/*.css');
+  const cssFiles = glob.sync('dist/assets/css/**/*.css');
   cssFiles.forEach(file => {
     const content = fs.readFileSync(file, 'utf-8');
 
@@ -112,15 +112,15 @@ function analyzeAssetUsage() {
 
 // 使用されているアセットのみコピー
 function copyUsedAssets(usedAssets) {
-  ensureDir('public/assets/img');
-  ensureDir('public/assets/fonts');
+  ensureDir('dist/assets/img');
+  ensureDir('dist/assets/fonts');
 
   let copiedCount = 0;
   let missingCount = 0;
 
   usedAssets.forEach(assetPath => {
     const srcPath = `src/${assetPath}`;
-    const destPath = `public/assets/${assetPath}`;
+    const destPath = `dist/assets/${assetPath}`;
 
     if (fs.existsSync(srcPath)) {
       ensureDir(path.dirname(destPath));
@@ -138,6 +138,31 @@ function copyUsedAssets(usedAssets) {
   }
 }
 
+// 静的ファイルをコピー
+function copyStaticFiles() {
+  console.log('📋 Copying static files...');
+
+  if (fs.existsSync('public')) {
+    const staticFiles = glob.sync('public/**/*', { nodir: true });
+
+    if (staticFiles.length > 0) {
+      staticFiles.forEach(file => {
+        const relativePath = file.replace('public/', '');
+        const destPath = `dist/${relativePath}`;
+
+        ensureDir(path.dirname(destPath));
+        fs.copyFileSync(file, destPath);
+      });
+
+      console.log(`   ✓ Copied ${staticFiles.length} static files from public/`);
+    } else {
+      console.log('   - No static files found in public/');
+    }
+  } else {
+    console.log('   - public/ directory not found');
+  }
+}
+
 // 1. Pugファイルをコンパイル
 function buildPugFiles() {
   console.log('🔨 Building Pug files...');
@@ -148,7 +173,7 @@ function buildPugFiles() {
 
   pugFiles.forEach(file => {
     const relativePath = file.replace('src/pug/', '').replace('/index.pug', '').replace('index.pug', '');
-    const outputPath = relativePath ? `public/${relativePath}/index.html` : 'public/index.html';
+    const outputPath = relativePath ? `dist/${relativePath}/index.html` : 'dist/index.html';
 
     const pageKey = relativePath || 'home';
     const pageConfig = pages[pageKey] || pages.home;
@@ -187,14 +212,14 @@ function buildPugFiles() {
 function buildSCSSFiles() {
   console.log('🎨 Building SCSS files...');
 
-  ensureDir('public/assets/css');
-  ensureDir('public/assets/css/page');
+  ensureDir('dist/assets/css');
+  ensureDir('dist/assets/css/page');
 
   try {
     // global.scss
     const globalResult = sass.compile('src/scss/global.scss');
-    fs.writeFileSync('public/assets/css/global.css', globalResult.css);
-    console.log('   ✓ public/assets/css/global.css');
+    fs.writeFileSync('dist/assets/css/global.css', globalResult.css);
+    console.log('   ✓ dist/assets/css/global.css');
 
     // ページ固有のSCSS
     const pageFiles = glob.sync('src/scss/page/*.scss');
@@ -202,8 +227,8 @@ function buildSCSSFiles() {
       try {
         const name = path.basename(file, '.scss');
         const result = sass.compile(file);
-        fs.writeFileSync(`public/assets/css/page/${name}.css`, result.css);
-        console.log(`   ✓ public/assets/css/page/${name}.css`);
+        fs.writeFileSync(`dist/assets/css/page/${name}.css`, result.css);
+        console.log(`   ✓ dist/assets/css/page/${name}.css`);
       } catch (error) {
         console.error(`   ✗ Error compiling ${file}:`, error.message);
       }
@@ -217,14 +242,14 @@ function buildSCSSFiles() {
 function buildJSFiles() {
   console.log('📦 Building JS files...');
 
-  ensureDir('public/assets/js');
-  ensureDir('public/assets/js/page');
+  ensureDir('dist/assets/js');
+  ensureDir('dist/assets/js/page');
 
   // main.js
   if (fs.existsSync('src/js/main.js')) {
     const mainJS = fs.readFileSync('src/js/main.js', 'utf-8');
-    fs.writeFileSync('public/assets/js/main.js', mainJS);
-    console.log('   ✓ public/assets/js/main.js');
+    fs.writeFileSync('dist/assets/js/main.js', mainJS);
+    console.log('   ✓ dist/assets/js/main.js');
   }
 
   // ページ固有のJS
@@ -232,19 +257,19 @@ function buildJSFiles() {
   pageFiles.forEach(file => {
     const name = path.basename(file);
     const content = fs.readFileSync(file, 'utf-8');
-    fs.writeFileSync(`public/assets/js/page/${name}`, content);
-    console.log(`   ✓ public/assets/js/page/${name}`);
+    fs.writeFileSync(`dist/assets/js/page/${name}`, content);
+    console.log(`   ✓ dist/assets/js/page/${name}`);
   });
 
   // vendor JS（もしあれば）
   const vendorFiles = glob.sync('src/js/vendor/*.js');
   if (vendorFiles.length > 0) {
-    ensureDir('public/assets/js/vendor');
+    ensureDir('dist/assets/js/vendor');
     vendorFiles.forEach(file => {
       const name = path.basename(file);
       const content = fs.readFileSync(file, 'utf-8');
-      fs.writeFileSync(`public/assets/js/vendor/${name}`, content);
-      console.log(`   ✓ public/assets/js/vendor/${name}`);
+      fs.writeFileSync(`dist/assets/js/vendor/${name}`, content);
+      console.log(`   ✓ dist/assets/js/vendor/${name}`);
     });
   }
 }
@@ -252,6 +277,9 @@ function buildJSFiles() {
 // メイン実行関数
 function buildAll() {
   console.log('🚀 Building for development preview...\n');
+
+  // 静的ファイルを最初にコピー
+  copyStaticFiles();
 
   // ビルド実行
   buildPugFiles();
@@ -263,7 +291,7 @@ function buildAll() {
   copyUsedAssets(usedAssets);
 
   console.log('\n✅ Development build complete!');
-  console.log('📁 Files are ready in public/ directory');
+  console.log('📁 Files are ready in dist/ directory');
   console.log('🌐 Run "npm run dev:serve" to start preview server');
 }
 
